@@ -1,0 +1,188 @@
+CC
+CC    CONVERSION SUBROUTINE FOR LIST DATA
+CC
+      SUBROUTINE LSTCNV(N,NLST,LLST,LCNV,IERR,IUT0)
+C
+      IMPLICIT NONE
+      INTEGER*4 N,NLST
+      INTEGER*4 LLST(NLST),LCNV(N)
+      INTEGER*4 IERR,IUT0
+C
+      INTEGER*4 ILST,I
+C
+      DO 1000 ILST=1,NLST
+         I=LLST(ILST)
+         IF (I.LT.1.OR.I.GT.N) GOTO 9999
+         LLST(ILST)=LCNV(I)
+ 1000 CONTINUE
+C
+      RETURN
+C
+ 9999 CONTINUE
+      WRITE(IUT0,*)  ' ** LSTCNV: INVALID NUMBER IN LSTCNV ***'
+      IERR=1
+      RETURN
+C
+      END
+C
+CC
+CC    CONVERSION SUBROUTINE FOR REAL TYPE DATA
+CC
+      SUBROUTINE RELCNV(N,NR,ADATA,LCNV,AWORK,IERR,IUT0)
+C
+      IMPLICIT NONE
+      INTEGER*4 N,NR
+      REAL*4    ADATA(NR),AWORK(NR)
+      INTEGER*4 LCNV(NR)
+      INTEGER*4 IERR,IUT0
+C
+      INTEGER*4 I,IR
+C
+      DO 1000 I=1,N
+         AWORK(I)=ADATA(I)
+ 1000 CONTINUE
+C
+      DO 2000 IR=1,NR
+         I=LCNV(IR)
+         IF(I.LT.1.OR.I.GT.N) GOTO 9999
+         ADATA(I)=AWORK(IR)
+ 2000 CONTINUE
+C
+      RETURN
+C
+ 9999 CONTINUE
+      WRITE(IUT0,*)  ' ** RELCNV: INVALID NUMBER IN INTCNV ***'
+      IERR=1
+      RETURN
+C
+      END
+C
+CC
+CC    CONVERSION SUBROUTINE FOR REAL TYPE DATA
+CC
+      SUBROUTINE DBLCNV(N,NR,ADATA,LCNV,IERR,IUT0)
+C
+      IMPLICIT NONE
+      INTEGER*4 N,NR
+      REAL*8    ADATA(NR),AWORK(NR)
+      INTEGER*4 LCNV(NR)
+      INTEGER*4 IERR,IUT0
+C
+      INTEGER*4 I,IR
+C
+      DO 1000 I=1,N
+         AWORK(I)=ADATA(I)
+ 1000 CONTINUE
+C
+      DO 2000 IR=1,NR
+         I=LCNV(IR)
+         IF(I.LT.1.OR.I.GT.N) GOTO 9999
+         ADATA(I)=AWORK(IR)
+ 2000 CONTINUE
+C
+      RETURN
+C
+ 9999 CONTINUE
+      WRITE(IUT0,*)  ' ** DBLCNV: INVALID NUMBER IN INTCNV ***'
+      IERR=1
+      RETURN
+C
+      END
+C
+CC
+CC    CONVERSION SUBROUTINE FOR INTEGER TYPE DATA
+CC
+      SUBROUTINE NODCNV(NP,NE,N0,N1,NODE,LPCNV,LECNV,NODWK1,IERR,IUT0)
+C
+      IMPLICIT NONE
+      INTEGER*4 NP,NE,N0,N1
+      INTEGER*4 NODE(N1,NE),LPCNV(NP),LECNV(NE)
+      INTEGER*4 NODWK1(N0,NE)
+      INTEGER*4 IERR,IUT0
+C
+      INTEGER*4 I,IE,IP,IEC,IPC
+C
+      DO 1000 IE=1,NE
+         DO 1100 I=1,8
+            NODWK1(I,IE)=0
+ 1100    CONTINUE
+ 1000 CONTINUE
+C
+      DO 2000 IE=1,NE
+         IEC=LECNV(IE)
+         IF(IEC.LT.1.OR.IEC.GT.NE) GOTO 9999
+         DO 2100 I=1,8
+            IP=NODE(I,IE)
+            IF (IP.EQ.0) GOTO 2100
+            IPC=LPCNV(IP)
+            IF(IPC.LT.1.OR.IPC.GT.NP) GOTO 9999
+            NODWK1(I,IEC)=IPC
+ 2100    CONTINUE
+ 2000 CONTINUE
+C
+      DO 3000 IE=1,NE
+         DO 3100 I=1,8
+            NODE(I,IE)=NODWK1(I,IE)
+ 3100    CONTINUE
+ 3000 CONTINUE
+C
+      RETURN
+C
+ 9999 CONTINUE
+      WRITE(IUT0,*)  ' ** NODCNV: INVALID NUMBER IN NODCNV ***'
+      IERR=1
+      RETURN
+C
+      END
+C
+C=======================================================================
+      SUBROUTINE CRSCVI(NP,NPPMAX,NCRS,NCRS2,NPP,IPCRS,ITPCRS)
+C=======================================================================
+      IMPLICIT NONE
+C
+      INTEGER NP,NPPMAX,NCRS,NCRS2
+      INTEGER NPP(NP),IPCRS(NCRS),ITPCRS(NCRS2)
+      INTEGER ITCRS,ICRS,IP,K
+C
+      ITCRS=0
+      ICRS =0
+      DO 110 IP=1,NP
+         DO 120 K=1,NPPMAX
+            ITCRS=ITCRS+1
+            IF (K.GT.NPP(IP)) THEN
+               ITPCRS(ITCRS)=0
+            ELSE
+               ICRS=ICRS+1
+               ITPCRS(ITCRS)=IPCRS(ICRS)
+            ENDIF
+ 120     CONTINUE
+ 110  CONTINUE
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE CRSCVA(NP,NPPMAX,NCRS,NCRS2,NPP,A,TA)
+C=======================================================================
+      IMPLICIT NONE
+C
+      INTEGER NP,NPPMAX,NCRS,NCRS2
+      INTEGER NPP(NP)
+      REAL*4  A(NCRS),TA(NCRS2)
+      INTEGER ITCRS,ICRS,IP,K
+C
+      ITCRS=0
+      ICRS =0
+      DO 110 IP=1,NP
+         DO 120 K=1,NPPMAX
+            ITCRS=ITCRS+1
+            IF (K.GT.NPP(IP)) THEN
+               TA(ITCRS)=0.0E0
+            ELSE
+               ICRS=ICRS+1
+               TA(ITCRS)=A(ICRS)
+            ENDIF
+ 120     CONTINUE
+ 110  CONTINUE
+C
+      RETURN
+      END

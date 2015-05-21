@@ -1,0 +1,25 @@
+CC = mpicc
+FC = mpif90
+
+DEFINE += -DNO_METIS
+DEFINE += -DNO_REFINER
+
+# timing option
+DEFINE += -DPROF_MAPROF
+
+CFLAGS += $(DEFINE) -O3
+FFLAGS += $(DEFINE) -O3
+
+
+ifeq (, $(findstring -DNO_METIS, $(FFLAGS)))
+METIS = $(HOME)/opt/metis5
+#METIS = $(HOME)/opt/metis4
+CFLAGS += -I$(METIS)/include
+LIBS += -L$(METIS)/lib -lmetis
+endif
+
+ifeq (, $(findstring -DNO_REFINER, $(FFLAGS)))
+REFINER = $(HOME)/opt/REVOCAP_Refiner
+FFLAGS += -I$(REFINER)/include
+LIBS += -L$(REFINER)/lib -lRcapRefiner -lstdc++
+endif

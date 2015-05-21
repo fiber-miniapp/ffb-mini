@@ -1,0 +1,416 @@
+      SUBROUTINE BCGSXE(MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *                  ME,N,N1,NEX,NE,NP,NMAX,EPS,EPSRE,
+     *                  NODE,CM,DNXYZ,DNXI,DNYI,DNZI,
+     *                  B,NPFIX,LPFIX,
+     *                  NPSYMT,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,NITR,RESR,S,
+     *                  IPART,NDOM,MBPDOM,LDOM,NBPDOM,IPSLF,IPSND,
+     *                  R0,RK,PK,APK,ATK,TK,FXYZ,RX,RY,MWRK,WRKN,
+     *                  IUT0,IERR)
+#include "timing.h"
+      IMPLICIT NONE
+C
+CCC   [LOOP]
+      INTEGER*4 MCOLOR,MCPART
+      INTEGER*4 NCOLOR(4),NCPART(MCOLOR,4),LLOOP(MCPART,MCOLOR,4)
+C
+CCC   [FOR MID.NODES]
+C
+CCC   [INPUT]
+      INTEGER*4 ME,N,N1,NEX(8),NE,NP,NMAX,IUT0
+      REAL*4    EPS,EPSRE
+      INTEGER*4 NODE(N1,NE)
+      REAL*4    CM(NP),
+     *          DNXYZ(3,N1,ME),
+     *          DNXI(N1,ME),DNYI(N1,ME),DNZI(N1,ME),
+     *          B(NE)
+      REAL*4    XPSYMT(NPSYMT),YPSYMT(NPSYMT),ZPSYMT(NPSYMT)
+      INTEGER*4 NPFIX,LPFIX(NPFIX),NPSYMT,LPSYMT(NPSYMT)
+      INTEGER*4 IPART,NDOM,MBPDOM,
+     *          LDOM(NDOM),NBPDOM(NDOM),
+     *          IPSLF(MBPDOM,NDOM),IPSND(MBPDOM,NDOM)
+C
+CCC [INPUT/OUTPUT]
+      REAL*4    S(NE)
+C
+CCC [OUTPUT]
+      INTEGER*4 NITR,IERR
+      REAL*4    RES
+C
+CCC [WORK]
+      REAL*4    RX(0:N,ME),RY(0:N,ME),
+     1          R0(NE),RK(NE),PK(NE),APK(NE),ATK(NE),TK(NE),
+     2          FXYZ(3,NP)
+      INTEGER*4 MWRK
+      REAL*4    WRKN(MWRK,9)
+C
+CCCC  [LOCL]
+      INTEGER*4 IE
+      REAL*4    RKDOT,RKDOTA,BDOT,BDOTA,RESR,APDOT,APDOTA,
+     *          ATTDOT,ATTDTA,AT2DOT,AT2DTA,
+     *          RKDOTP,RSDOT,RSDOTA,
+     *          ALFA,BETA,QK
+      REAL*4    EPS0 
+      DATA EPS0 / 1.E-30 /
+C
+      CHARACTER*60 ERMSGC
+     & /' ## SUBROUTINE BCGSXE: FATAL      ERROR REPORT   ; RETURNED' /
+C
+      logical dummy
+C
+C
+C      SOLVE MATRIX EQUATION AT ELEMENTS BY BI-CGSTAB METHOS
+C         ( 3-D CALCULATION : SINGLE WORD & MULTI ELEMENT VERSION )
+C
+C       WRITTEN BY Y. YAMADE 2011.01.20
+C
+C          OPERATION COUNTS:    FLOP /ELEMENT/ITERATION
+C          DATA LOADINGS   :    WORDS/ELEMENT/ITERATION
+C                           (   WORDS CONTIGUOUSLY,
+C                               WORDS BY 4-WORD STRIDE, AND
+C                               WORDS BY LIST )
+C
+C     ARGUMENT LISTINGS
+C (1) INPUT
+C INT *4 ME           ; MAX. NUMBER OF TOTAL ELEMENTS
+C INT *4 N1           ; THE DIMENSION SIZE OF THE FIRST ELEMENTS OF THE 
+C                       PASSED ARRAYS 'NODET'
+C INT *4 NE           ; NUMBER OF ELEMENTS
+C INT *4 NP           ; NUMBER OF NODES
+C INT *4 NEX       (I); INCLUDES NUMBER OF ELEMENTS AND NUMBER OF LOCAL NODES
+C INT *4 NE           ; NUMBER OF ELEMENTS
+C INT *4 NP           ; NUMBER OF NODES
+C INT *4 NMAX         ; NUMBER OF MATRIX SOLVER ITERATIONS
+C INT *4 IUT0         ; FILE NUMBER TO REPORT ERROR OCCURENCE
+C REAL*4 EPS          ; MAXIMUM ALLOWABLE ERROR
+C INT *4 NODE   (I,IE); NODE TABLE
+C REAL*4 CM       (IP); INVERSED LUMPED MASS MATRIX
+C REAL*4 DNX    (I,IE); ELEMENT CENTER VALUE OF NX
+C REAL*4 DNY    (I,IE); ELEMENT CENTER VALUE OF NY
+C REAL*4 DNZ    (I,IE); ELEMENT CENTER VALUE OF NZ
+C REAL*4 DNXI   (I,IE); ELEMENT CENTER VALUE OF NX
+C REAL*4 DNYI   (I,IE); ELEMENT CENTER VALUE OF NX
+C REAL*4 DNZI   (I,IE); ELEMENT CENTER VALUE OF NX
+C
+C REAL*4 B        (IE); GLOBAL FORCE VECTOR  
+C INT *4 NFIX         ; NUMBER OF FIX BOUNDARY NODES
+C INT *4 LPFIX    (IB); FIX BOUNDARY NODES
+C
+C INT *4 IPART        ; SUB-DOMAIN NUMBER THAT THIS TASK SHOULD TAKE/IS
+C                       TAKING CARE OF. IPART BEING SET ZERO MEANS THAT
+C                       THE PROGRAM SHOULD RUN/IS RUNNING IN SERIAL 
+C                       MODE.
+C INT *4 NDOM         ; NUMBER OF THE NERIBERING SUB-DOMAINS
+C INT*4  MBPDOM       ; THE MAXIMUM NUMBER OF THE INTER-CONNECT 
+C                       BOUNDARY NODES FOR ONE NEIBERING SUB-DOMAIN
+C INT *4 LDOM   (IDOM); NEIBERING SUB-DOMAIN NUMBER
+C INT *4 NBPDOM (IDOM); NUMBER OF INTER-CONNECT BOUNDARY NODES
+C                       SHARING WITH THE IDOM'TH NEIBERING SUB-DOMAIN,
+C                       LDOM(IDOM)
+C INT *4 IPSLF(I,IDOM); INTER-CONNECT BOUNDARY NODE NUMBER IN THE
+C                       CALLING TASK'S SUB-DOMAIN, FOR THE IDOM'TH
+C                       NEIBERING SUB-DOMAIN, LDOM(IDOM)
+C INT *4 IPSND(I,IDOM); INTER-CONNECT BOUNDARY NODE NUMBER IN THE
+C                       SUB-DOMAIN THAT IS RECEIVING THE CALLING
+C                       TASK'S RESIDUALS.
+C
+C (2) INPUT/OUTPUT     
+C REAL*4 S        (IE); GLOBAL SOLUTION VECTOR (PROVIDE INITIAL GUESS) 
+C
+C (3) OUTPUT     
+C INT *4 NITR         ; NUMBER OF ITERATIONS DONE
+C REAL*4 RES          ; L2-NORM RESIDUAL OF THE FINAL SOLUTION VECTOR
+C INT *4 IERR         ; RETURN CODE TO REPORT ERROR OCCURRENCE
+C                   0 --- NORMAL TERMINATION
+C                   1 --- A FATAL ERROR HAS OCCURRED
+C
+C (4) WORK     
+C REAL*4 RX     (I,IE); WORK REGION PASSED FOR CALLAP
+C REAL*4 RY     (I,IE); WORK REGION PASSED FOR CALLAP
+C REAL*4 R0       (IE); WORK REGION
+C REAL*4 RK       (IE); WORK REGION
+C REAL*4 PK       (IE); WORK REGION
+C REAL*4 APK      (IE); WORK REGION
+C REAL*4 ATK      (IE); WORK REGION
+C REAL*4 TK       (IE); WORK REGION
+C REAL*4 FX       (IE); WORK REGION
+C REAL*4 FY       (IE); WORK REGION
+C REAL*4 FZ       (IE); WORK REGION
+C
+C
+      dummy = .false.
+C
+      IF(NMAX.EQ.0) RETURN
+C
+      NITR=0
+C
+C
+CCC   1. SET INITIAL RESIDUAL VECTOR AND SEARCH-DIRECTION VECTOR
+C
+C   
+C          OPERATION COUNTS:   FLOP /ELEMENT
+C          DATA LOADINGS   :   WORDS/ELEMENT
+C                           (  WORDS CONTIGUOUSLY,
+C                              WORDS BY 4-WORD STRIDE, AND
+C                              WORDS BY LIST )
+      TIME_START(TM_CALLAP)
+      CALL CALLAP(MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *            ME,N,N1,NE,NP,NEX,NODE,
+     *            S,RK,DNXYZ,DNXI,DNYI,DNZI,
+     *            CM,
+     *            IPART,NDOM,MBPDOM,LDOM,NBPDOM,IPSLF,IPSND,
+     *            NPFIX,LPFIX,
+     *            NPSYMT,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *            FXYZ,RX,RY,MWRK,WRKN,
+     *            IUT0,IERR)
+      TIME_STOP(TM_CALLAP)
+C
+      IF(IERR.EQ.1) THEN
+          WRITE(IUT0,*) ERMSGC
+          RETURN
+      ENDIF
+C 
+      RKDOT = 0.E0
+      BDOT = 0.E0
+      DO 300 IE = 1 , NE
+          RK (IE) = B (IE)-RK (IE)
+          R0 (IE) = RK(IE)
+          PK (IE) = RK(IE)
+          TK (IE) = 0.E0
+          RKDOT = RKDOT+R0(IE)*RK(IE)
+          BDOT =  BDOT +B (IE)*B (IE)
+  300 CONTINUE
+C
+      IF(IPART.GE.1) THEN
+          TIME_START(TM_PRES3E_COM)
+          CALL DDCOM2(RKDOT,RKDOTA)
+          CALL DDCOM2(BDOT,BDOTA)
+          TIME_STOP(TM_PRES3E_COM)
+          RKDOT = RKDOTA
+          BDOT = BDOTA
+      ENDIF
+C
+      IF(ABS(BDOT).LE.EPS0) BDOT = 1.0E0
+C
+      RES  = SQRT(RKDOT)
+      RESR = RES/SQRT(BDOT)
+C
+#if 0
+      IF(RES.LE.EPS.OR.RESR.LE.EPSRE) RETURN
+#else
+      if (EPS > 0.0) then
+        IF(RES.LE.EPS.OR.RESR.LE.EPSRE) RETURN
+      end if
+#endif
+C
+C
+CCC   2. COMPUTE PRODUCT OF COEFFICIENT MATRIX AND SEARCH-DIRECTION VECTOR
+CCC      AND INNER PRODUCT OF COMPUTED PRODUCT AND SEARCH-DIRECTION VECTOR
+C
+C 
+ 10   CONTINUE
+C
+      NITR=NITR+1
+C
+C
+CCC   2.1 COMPUTE APK,ALFA
+C
+C
+C          OPERATION COUNTS:   FLOP /ELEMENT
+C          DATA LOADINGS   :   WORDS/ELEMENT
+C                           (  WORDS CONTIGUOUSLY,
+C                              WORDS BY 4-WORD STRIDE, AND
+C                              WORDS BY LIST )
+      TIME_START(TM_CALLAP)
+      CALL CALLAP(MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *            ME,N,N1,NE,NP,NEX,NODE,
+     *            PK,APK,DNXYZ,DNXI,DNYI,DNZI,
+     *            CM,
+     *            IPART,NDOM,MBPDOM,LDOM,NBPDOM,IPSLF,IPSND,
+     *            NPFIX,LPFIX,
+     *            NPSYMT,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *            FXYZ,RX,RY,MWRK,WRKN,
+     *            IUT0,IERR)
+      TIME_STOP(TM_CALLAP)
+C
+      IF(IERR.EQ.1) THEN
+          WRITE(IUT0,*) ERMSGC
+          RETURN
+      ENDIF
+C
+      APDOT = 0.E0
+      DO 400 IE = 1 , NE
+          APDOT = APDOT+R0(IE)*APK(IE)
+  400 CONTINUE
+C
+      IF(IPART.GE.1) THEN
+          TIME_START(TM_PRES3E_COM)
+          CALL DDCOM2(APDOT,APDOTA)
+          TIME_STOP(TM_PRES3E_COM)
+          APDOT = APDOTA
+      ENDIF
+C
+#if 0
+      IF(APDOT .EQ. 0.0E0) RETURN
+      ALFA = RKDOT/APDOT
+#else
+      if (EPS > 0.0E0) then
+        IF(APDOT .EQ. 0.0E0) RETURN
+        ALFA = RKDOT/APDOT
+      else
+        if (dummy . or. APDOT == 0.0E0) then
+          dummy = .true.
+          ALFA = 0.0
+        else
+          ALFA = RKDOT/APDOT
+        end if
+      endif
+#endif
+C
+C
+CCC   2.2 COMPUTE TK=RK-ALFA*APK     
+C
+C
+      DO 500 IE = 1 , NE
+          TK (IE) = RK(IE)-ALFA*APK(IE) 
+  500 CONTINUE 
+C
+C
+CCC   2.3 COMPUTE ATK
+C
+C
+C          OPERATION COUNTS:   36 FLOP /ELEMENT
+C          DATA LOADINGS   :   48 WORDS/ELEMENT
+C                           (  32 WORDS CONTIGUOUSLY,
+C                               4 WORDS BY 4-WORD STRIDE, AND
+C                              12 WORDS BY LIST )
+      TIME_START(TM_CALLAP)
+      CALL CALLAP(MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *            ME,N,N1,NE,NP,NEX,NODE,
+     *            TK,ATK,DNXYZ,DNXI,DNYI,DNZI,
+     *            CM,
+     *            IPART,NDOM,MBPDOM,LDOM,NBPDOM,IPSLF,IPSND,
+     *            NPFIX,LPFIX,
+     *            NPSYMT,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *            FXYZ,RX,RY,MWRK,WRKN,
+     *            IUT0,IERR)
+      TIME_STOP(TM_CALLAP)
+C
+      IF(IERR.EQ.1) THEN
+          WRITE(IUT0,*) ERMSGC
+          RETURN
+      ENDIF
+C
+C
+CCC   2.4 COMPUTE QK
+C
+C
+      ATTDOT  = 0.E0
+      AT2DOT  = 0.E0
+      DO 600 IE = 1 , NE
+          ATTDOT = ATTDOT+ATK(IE)* TK(IE)
+          AT2DOT = AT2DOT+ATK(IE)*ATK(IE)
+  600 CONTINUE
+C
+      IF(IPART.GE.1) THEN
+          TIME_START(TM_PRES3E_COM)
+          CALL DDCOM2(ATTDOT,ATTDTA)
+          CALL DDCOM2(AT2DOT,AT2DTA)
+          TIME_STOP(TM_PRES3E_COM)
+          ATTDOT = ATTDTA
+          AT2DOT = AT2DTA
+      ENDIF
+C
+#if 0
+      IF(AT2DOT .EQ. 0.E0) RETURN
+      QK = ATTDOT/AT2DOT
+#else
+      if (EPS > 0.0E0) then
+        IF(AT2DOT .EQ. 0.E0) RETURN
+        QK = ATTDOT/AT2DOT
+      else
+        if (dummy .or. AT2DOT == 0.0E0) then
+          dummy = .true.
+          QK = 0.0E0
+          ALFA = 0.0E0
+        else
+          QK = ATTDOT/AT2DOT
+        end if
+      end if
+#endif
+C
+C
+CCC   2.5 UPDATE SOLUTION VECTOR AND RESIDUAL VECTOR
+CCC   2.6 RETURN IF L2-NORM OF UPDATED SOLUTION VECTOR IS LESS THAN CRITERIA
+C
+C
+      RKDOTP = RKDOT
+      RKDOT  = 0.E0
+      RSDOT  = 0.E0
+      DO 700 IE = 1 , NE
+          S  (IE) = S (IE)+ ALFA*PK(IE) + QK*TK (IE)   
+          RK (IE) = TK(IE)              - QK*ATK(IE) 
+          RKDOT = RKDOT+R0(IE)*RK(IE)
+          RSDOT = RSDOT+RK(IE)*RK(IE)
+  700 CONTINUE
+C
+C
+      IF(IPART.GE.1) THEN
+          TIME_START(TM_PRES3E_COM)
+          CALL DDCOM2(RKDOT,RKDOTA)
+          CALL DDCOM2(RSDOT,RSDOTA)
+          TIME_STOP(TM_PRES3E_COM)
+          RKDOT = RKDOTA
+          RSDOT = RSDOTA
+      ENDIF
+C
+      RES  = SQRT(RSDOT)
+      RESR = RES/SQRT(BDOT)
+C
+#if 0
+      IF(RES.LE.EPS.OR.RESR.LE.EPSRE) RETURN
+#else
+      if (EPS > 0.0E0) then
+        IF(RES.LE.EPS.OR.RESR.LE.EPSRE) RETURN
+      end if
+#endif
+C
+C
+CCC   2.7 UPDATE SEARCH-DIRECTION VECTOR
+C     
+C
+#if 0
+      IF(QK     .EQ. 0.E0) RETURN
+      IF(RKDOTP .EQ. 0.E0) RETURN
+      BETA = (ALFA/QK)*(RKDOT/RKDOTP)
+#else
+      if (EPS > 0.0E0) then
+        IF(QK     .EQ. 0.E0) RETURN
+        IF(RKDOTP .EQ. 0.E0) RETURN
+        BETA = (ALFA/QK)*(RKDOT/RKDOTP)
+      else
+        if (dummy .or. QK == 0.0E0 .or. RKDOTP == 0.0E0) then
+          dummy = .true.
+          RKDOTP = 0.0E0
+          BETA = 0.0E0
+        else 
+          BETA = (ALFA/QK)*(RKDOT/RKDOTP)
+        end if
+      endif
+#endif
+C 
+      DO 800 IE = 1 , NE
+          PK (IE) = RK(IE)+BETA*(PK(IE)-QK*APK(IE))
+  800 CONTINUE
+C
+C
+CCC   2.7 RETURN IF ITERATION NUMBER HAS REACHED THE GIVEN MAXIMUM NUMBER,
+CCC       OTHERWISE CONTINUE ITERATIONS UNTIL SOLUTION IS CONVERGED
+C
+C
+      IF(NITR.EQ.NMAX) THEN          
+          RETURN
+      END IF  
+C
+      GO TO 10
+C
+      END

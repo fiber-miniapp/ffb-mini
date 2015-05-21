@@ -1,0 +1,14 @@
+*.o
+*.mod
+*.lst
+*.log
+*.a
+
+src/param.h
+
+test/BOUN.*
+test/MESH.*
+test/FLOW.*
+test/les3x.log.*
+test/PARMLES3X
+test/maprof_output.yaml

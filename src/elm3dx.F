@@ -1,0 +1,131 @@
+      SUBROUTINE ELM3DX(MGAUSS,IGAUSH,
+     *                  MELM,N1,NE,NP,NEX,X,Y,Z,NODE,
+     *                  SNI,DNXI,DNYI,DNZI,SN,DNX,DNY,DNZ,
+     *                  E,EX,EY,EZ,EXX,EYY,EZZ,EXY,EXZ,EYZ,
+     *                  NN,NC,PSI,PSIC,WW,IUT0,IERR)
+      IMPLICIT NONE
+C
+      INTEGER MGAUSS,IGAUSH
+      INTEGER N1,NE,NP,NSKIP4,NEX
+      INTEGER IELM
+      REAL*8  X, Y, Z
+      INTEGER NODE
+      REAL*4  SNI,DNXI,DNYI,DNZI
+      REAL*4  SN,DNX,DNY,DNZ,E,EX,EY,EZ,EXX,EYY,EZZ,EXY,EYZ,EXZ
+      INTEGER IUT0,IERR
+      REAL*8  NN,NC,PSI,PSIC,WW
+C
+      INTEGER*4 MELM
+      DIMENSION NEX(12)
+      DIMENSION X(NP),Y(NP),Z(NP)
+      DIMENSION NODE(N1,NE+1),
+     *          SNI( N1,NE+1),DNXI(N1,NE+1),DNYI(N1,NE+1),DNZI(N1,NE+1),
+     *          SN ( N1,NE+1),DNX (N1,NE+1),DNY (N1,NE+1),DNZ (N1,NE+1),
+     *          E  (MELM),
+     *          EX (MELM),EY (MELM),EZ (MELM),
+     *          EXX(MELM),EYY(MELM),EZZ(MELM),
+     *          EXY(MELM),EYZ(MELM),EXZ(MELM)
+      DIMENSION NN (  N1,MGAUSS),NC  (  N1),
+     *          PSI(3,N1,MGAUSS),PSIC(3,N1),WW(MGAUSS)
+C      
+C     ARGUMENT LISTINGS
+C       (1) INPUT
+C          MGAUSS      ; MAX. NUMBER OF GAUSS POINTS
+C          IGAUSH      ; NUMBER OF GAUSS POINTS FOR HEX. 
+C
+C          X       (IP); X-COORDINATES OF NODES
+C          Y       (IP); Y-COORDINATES OF NODES
+C          Z       (IP); Z-COORDINATES OF NODES
+C          NODE  (I,IE); NODE NO. TABLE BASED ON ELEMENT
+C
+C          ME          ; MAX. NUMBER OF TOTAL ELEMENTS
+C          N           ; NUMBER OF NODES ASSIGNED TO ONE ELEMENT
+C          NE          ; NUMBER OF TOTAL ELEMENTS
+C          NP          ; NUMBER OF TOTAL    NODES
+C          NEX(I)      ; INCLUDES NUMBER OF ELEMENTS AND NUMBER OF LOCAL NODES
+C                        AS FOLOOWS
+C          NEX(1)      ; NUMBER OF TET.    ELEMENTS
+C          NEX(2)      ; NUMBER OF PYRAMID ELEMENTS
+C          NEX(3)      ; NUMBER OF WEGDE   ELEMENTS
+C          NEX(4)      ; NUMBER OF HEX.    ELEMENTS
+C          NEX(5)      ; NUMBER OF LOCAL NODES IN A TET.    ELEMENT (=4)
+C          NEX(6)      ; NUMBER OF LOCAL NODES IN A PYRAMID ELEMENT (=5)
+C          NEX(7)      ; NUMBER OF LOCAL NODES IN A WEGDE   ELEMENT (=6)
+C          NEX(8)      ; NUMBER OF LOCAL NODES IN A HEX.    ELEMENT (=8)
+C
+C          IUT0        ; FILE NUMBER TO REPORT ERROR OCCURENCE
+C
+C       (2) OUTPUT
+C          SNI   (I,IE); ELEMENT CENTER VALUE OF N
+C          DNXI  (I,IE); ELEMENT CENTER VALUE OF NX
+C          DNYI  (I,IE); ELEMENT CENTER VALUE OF NY
+C          DNZI  (I,IE); ELEMENT CENTER VALUE OF NZ
+C
+C          SN    (I,IE); INTEGRATED ELEMENT VECTOR OF N
+C          DNX   (I,IE); INTEGRATED ELEMENT VECTOR OF NX
+C          DNY   (I,IE); INTEGRATED ELEMENT VECTOR OF NY
+C          DNZ   (I,IE); INTEGRATED ELEMENT VECTOR OF NZ
+C
+C          E   (IE,I,J); INTEGRATED ELEMENT MATRIX OF N*NT
+C          EX  (I,IE,J); INTEGRATED ELEMENT MATRIX OF N*NXT
+C          EY  (I,IE,J); INTEGRATED ELEMENT MATRIX OF N*NYT
+C          EZ  (I,IE,J); INTEGRATED ELEMENT MATRIX OF N*NZT
+C          EXX (I,IE,J); INTEGRATED ELEMENT MATRIX OF NX*NXT
+C          EYY (I,IE,J); INTEGRATED ELEMENT MATRIX OF NY*NYT
+C          EZZ (I,IE,J); INTEGRATED ELEMENT MATRIX OF NZ*NZT
+C          EXY (I,IE,J); INTEGRATED ELEMENT MATRIX OF NX*NYT
+C          EXZ (I,IE,J); INTEGRATED ELEMENT MATRIX OF NX*NZT
+C          EYZ (I,IE,J); INTEGRATED ELEMENT MATRIX OF NY*NZT
+C
+C          IERR        ; RETURN CODE TO REPORT ERROR OCCURENCE
+C                   0 --- NORMAL TERMINATION
+C                   1 --- A FATAL ERROR HAS OCCURED
+C
+C      
+******************
+***** OTHERS *****
+******************
+      INTEGER NEHEX,NHEX
+      INTEGER IE,J
+C
+***** ALIAS *****
+      NEHEX=NEX(4)
+      NHEX=NEX(8)
+      NSKIP4=NEX(12)
+C
+      DO 1000 IE=1,NE
+         DO 1100 J=1,N1
+            SN  (J,IE)=0.0E0
+            DNX (J,IE)=0.0E0
+            DNY (J,IE)=0.0E0
+            DNZ (J,IE)=0.0E0
+ 1100    CONTINUE
+ 1000 CONTINUE
+C
+      IERR=0
+      IE  =1
+      IELM=1
+C
+**********************************
+***** MAKE INTEGRALS FOR HEX *****
+**********************************
+      CALL SETHEX(N1,IGAUSH,NC,PSIC,NN,PSI,WW,IUT0,IERR)
+      IF(IERR.NE.0) GOTO 9999
+      CALL INT3DX(NEHEX,N1,NHEX,NSKIP4,IGAUSH,
+     *            NC,PSIC,NN,PSI,WW,X,Y,Z,NODE(1,IE),
+     *            SNI(1,IE),DNXI(1,IE),DNYI(1,IE),DNZI(1,IE),
+     *            SN (1,IE),DNX (1,IE),DNY (1,IE),DNZ (1,IE),
+     *            E(IELM),EX(IELM),EY(IELM),EZ(IELM),
+     *            EXX(IELM), EYY(IELM), EZZ(IELM),
+     *            EXY(IELM), EXZ(IELM), EYZ(IELM))
+      IE=IE+NEHEX
+      IELM=IELM+NSKIP4*NEHEX
+C
+      RETURN
+C
+ 9999 CONTINUE
+      WRITE(IUT0,*) 'ERROR OCCURED IN ELM3DX'
+      IERR=1
+      RETURN
+C 
+      END

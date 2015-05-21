@@ -1,0 +1,32 @@
+CC = mpifccpx
+FC = mpifrtpx
+
+#DEFINE += -DNO_METIS
+DEFINE += -DNO_REFINER
+
+# timing option
+DEFINE += -DPROF_MAPROF
+
+# timing option (fapp on K/FX10)
+#DEFINE += -DPROF_FAPP
+
+CFLAGS += $(DEFINE) -Kvisimpact,ocl
+FFLAGS += $(DEFINE) -Kvisimpact,ocl -Qt
+
+
+ifeq (, $(findstring -DNO_METIS, $(FFLAGS)))
+##METIS = $(HOME)/opt/metis
+##CFLAGS += -I$(METIS)/include
+##LIBS += -L$(METIS)/lib -lmetis
+LIBS += -lmetis  ## oakleaf-fx.cc.u-tokyo.ac.jp
+endif
+
+ifeq (, $(findstring -DNO_REFINER, $(FFLAGS)))
+##REFINER = $(HOME)/opt/REVOCAP_Refiner
+##FFLAGS += -I$(REFINER)/include
+##LIBS += -L$(REFINER)/lib -lRcapRefiner
+LIBS += -lRcapRefiner  ## oakleaf-fx.cc.u-tokyo.ac.jp
+LD = mpiFCCpx
+LDFLAGS = --linkfortran -Kvisimpact
+endif
+

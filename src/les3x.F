@@ -1,0 +1,2165 @@
+C======================================================================C
+C                                                                      C
+C SOFTWARE NAME : FRONTFLOW_BLUE.8.1                                   C
+C                                                                      C
+C  MAIN PRORGRAM : LES3X                                               C
+C                                                                      C
+C                                       WRITTEN BY Y.YAMADE            C
+C                                       WRITTEN BY H.YOSHIMURA         C
+C                                       WRITTEN BY T.TAKAYAMA          C
+C                                                                      C
+C                                                                      C
+C CONTACT ADDRESS : IIS, THE UNIVERSITY OF TOKYO, CISS                 C
+C                                                                      C
+C THERMO-FLUID ANALYSIS SOLVERS FOR LARGE-SCALE-ASSEMBLY               C
+C                                                                      C
+C======================================================================C
+C*    PROGRAM LES3X
+      SUBROUTINE LES3X(FILEIN)
+#include "timing.h"
+      IMPLICIT NONE 
+C
+      CHARACTER*(*) FILEIN
+C
+      INTEGER*4 N0,N1,N2
+      PARAMETER (N0=8,N1=9,N2=8)
+C
+      INTEGER*4 ME,MP,MEP,MPP
+      INTEGER*4 MB,MDOM,MBPDOM
+      DATA MEP    /20/
+      DATA MPP    /31/
+C
+      INTEGER*4 MER,MPR,MEPR,MPPR,MBR,MBPR,MDOMR
+      DATA MER    /-1/
+      DATA MPR    /-1/ 
+      DATA MEPR   /-1/
+      DATA MPPR   /-1/
+      DATA MBR    /-1/
+      DATA MBPR   /-1/
+      DATA MDOMR  /-1/
+      INTEGER*4 MWRK,
+     *          MPWALL,
+     *          MPINT,MPBODY
+C
+      CHARACTER*30 DATE
+      DATA DATE     / 'LES3X:VER. 42.06 :2013.03.25' /
+C
+CLES3X----------------------------------------------------------CLES3X
+CCCCCC      CONSTANTS DEFINITION                                CCCCCC
+CLES3X----------------------------------------------------------CLES3X
+CC
+CC [A.01] CONSTANTS REGARDING CONTROL PARAMETERS
+CC
+      INTEGER*4 IFORM,
+     *          NMAXP,NMAXT,
+     *          NTIME,ISTART,
+     *          JPRESS,IVELIN
+      REAL*4    VISCM,DT,
+     *          EPSP,EPST,
+     *          TFINAL,UFINAL,VFINAL,WFINAL,
+     *          VELIN0(3),BTDCOE(4),
+     *          D000,U000,RHO000
+C
+      DATA IVELIN /0/
+      DATA VELIN0 /0.0E0,0.0E0,0.0E0/
+      DATA BTDCOE /0.1E0,0.0E0,0.0E0,0.0E0/
+C
+      DATA JPRESS /1/
+CC
+CC [A.02] CONSTANTS REGARDING FILE ALLOCATIONS
+CC
+      INTEGER*4 IACT,IRESV,IWRITE,INAME,
+     *          ICAST,IDATA0,IALL,ISKIP,ISKIP1,ICHECK,
+     *          JGRID 
+      INTEGER*4 MAXPRN
+      CHARACTER*30 NAME
+      DATA IWRITE / 2 /
+      DATA INAME  / 1 /
+      DATA MAXPRN / 200 /
+      DATA ICAST  /0/
+      DATA IDATA0 /0/
+      DATA IALL   /0/
+      DATA ISKIP  /0/
+      DATA ISKIP1 /1/
+      DATA ICHECK /999999/
+      DATA JGRID  /1/
+C
+      INTEGER*4 MCOM,NCOMFL,NCOMST 
+      PARAMETER ( MCOM = 22 )
+      CHARACTER*60 COMGEN,COMFLE(MCOM),COMSET(MCOM)
+      CHARACTER*60 FILEMS,FILEBC,FILEIF,FILEFF,FILEHS,
+     *             FILEMR,FILEBR,FILEFR,
+     *             FILELG,FILE
+      DATA FILELG / 'les3x.log' /
+C*    DATA FILEIN / 'PARMLES3X' /
+C
+      INTEGER*4 IUT0,IUT5,IUT6,IUTLG
+      DATA IUT0  /  0 /
+      DATA IUT5  /  5 /
+      DATA IUT6  /  6 /
+      DATA IUTLG / 60 /
+C
+      INTEGER*4 IUTMS,IUTBC,IUTIF,IUTFF,
+     *          IUTMR,IUTBR,IUTFR
+      DATA IUTMS / 10 /
+      DATA IUTBC / 11 /
+      DATA IUTIF / 12 /
+      DATA IUTFF / 13 /
+      DATA IUTMR / 22 /
+      DATA IUTBR / 23 /
+      DATA IUTFR / 24 /
+C
+      INTEGER*4 IINTRP
+      DATA IINTRP/0/
+CC
+CC [A.03] CONSTANTS REGARDING SUBGRID-SCALE (SMAGORINSKY) MODEL
+CC
+CC
+CC [A.04] CONSTANTS REGARDING NEAR-WALL TURBULENCE TREATMENTS
+CC
+CC
+CC [A.05] CONSTANTS REGARDING NUMERICAL METHODS
+CC   
+CC
+CC [A.06] CONSTANTS REGARDING ELEMENT INTEGRATION
+CC
+      INTEGER*4 MGAUSS,IGAUSH
+      PARAMETER (MGAUSS=100)
+      DATA IGAUSH / 64 /
+CC
+CC [A.07] CONSTANTS REGARDING REFINER I.F.
+CC
+C          NRFN        ;NUMBER OF REFINE  (DEFAULT=0)
+C                       IT MUST BE ZERO OR ONE IN THIS VERSION 
+C          IRFNMW      ;REFINED MESH AND BOUN FILE WILL BE OUTPUT
+C                       WHEN THIS PARAMETER IS ONE (DEFAULT=0)      
+C          IRFNFF      ;READ IN FLOW DATA (U,V,W,P) WILL BE REFINED
+C                       WHEN THIS PARAMETER IS ONE (DEFAULT=0)      
+C          NGRID
+C         
+      INTEGER*4   NRFN,IRFNMW,IRFNFF,NGRID
+      DATA NRFN   /0/
+      DATA IRFNMW /0/
+      DATA IRFNFF /0/
+#ifndef NO_REFINER
+      INTEGER*4   NLAYER,LLAYER,IRFNR
+      DIMENSION LLAYER(20)
+#endif
+CC
+CC [A.08] CONSTANTS REGARDING COUPLER I.F.
+CC
+CC
+CC [A.09] CONSTANTS REGARDING RENUMBERING
+CC
+      INTEGER*4 JSORT,JCOLOR,JUNROL
+      INTEGER*4 NDIVX,NDIVY,NDIVZ
+      INTEGER*4 NEIP(4)
+      INTEGER*4 MCOLOR,MCPART
+      PARAMETER(MCOLOR=1000,MCPART=10000)
+      INTEGER*4 NCOLOR(4),NCPART(MCOLOR,4),LLOOP(MCPART,MCOLOR,4)
+C        
+      INTEGER*4,ALLOCATABLE::LPBTOA(:),LPATOB(:),LEBTOA(:),LEATOB(:)
+      DATA JSORT  / 0/
+      DATA JCOLOR / 0/
+      DATA JUNROL / 0/
+      DATA NDIVX  /10/
+      DATA NDIVY  /10/
+      DATA NDIVZ  /10/
+      DATA NEIP   /1500,1500,1500,1500/
+C
+CC [A.10] CONSTANTS REGARDING HISTORY DATA
+CC
+CC [A.11] CONSTANTS REGARDING ERROR TRAP
+CC
+      INTEGER*4 IERR,IERRA,JESC,LERR(50)
+      DATA IERR /0/ 
+      DATA JESC /0/
+C
+      CHARACTER*60 ERMSGB
+     * / ' ## PROGRAM    LES3X: FATAL      ERROR OCCURENCE; STOPPED ' /
+      CHARACTER*60 EREXP1
+     * / ' ALLOCATING FAILED                                        ' /
+      CHARACTER*60 EREXP2
+     * / ' READ-IN DATA ARE NOT CONSISTENT WITH THE MESH DATA        ' /
+      CHARACTER*60 EREXP5
+     * / ' NUMBER OF WALL BOUNDARY NODES          EXCEEDED LIMIT OF'   /
+      CHARACTER*60 EREXP6
+     * / ' FIELD MAXIMUM DIVERGENT                EXCEEDED LIMIT OF'   /
+      CHARACTER*60 EREXP7
+     * / ' NUMBER OF NON-ZEROS IN CRS FORMAT      EXCEEDED LIMIT OF'   /
+      CHARACTER*60 EREXP8
+     * / ' COORDINATE WHERE DIV. IS MAX::                            ' /
+      CHARACTER*60 ERMSGC
+     * / ' ## PROGRAM    LES3X : FATAL      ERROR REPORT   ; STOPPED ' /
+      CHARACTER*10 BLANK / ' ' /
+CC
+CC [A.12] CONSTANTS REGARDING FLOW RATE CONTROL
+CC
+CC
+CC [A.13] CONSTANTS REGARDING MATRIX SOLVER
+CC
+      INTEGER*4 MRCM,NMAXB,ISOLP
+      DATA MRCM  / 4/
+      DATA NMAXB /10/
+      DATA ISOLP / 2/
+CC    ISLOP: MATRIX SOLVER FLAG FOR PRES. EQ. (1:BCGSTAB, 2:RCM)
+CC
+C
+CLES3X----------------------------------------------------------CLES3X
+CCCCCC      VARIABLES DEFINITION                                CCCCCC
+CLES3X----------------------------------------------------------CLES3X
+CC
+CC [B.01] FIELD VARIABLES
+CC
+      INTEGER*4 NE,NP,NEHEX,NEWED,NEPRD,NETET,NEX(12)
+      REAL*4,ALLOCATABLE::
+     *       X(:),Y (:),Z(:),U(:),V(:),W(:),
+     *       PN(:),P(:),
+     *       VISC(:),
+     *       PRCM(:,:),APRCM(:,:)
+      REAL*8,ALLOCATABLE:: XD(:),YD(:),ZD(:)
+      INTEGER*4 NE_total, NP_total, total
+C
+CC
+CC [B.02] ELEMENT'S SHAPE DEPENDENT CONSTANTS
+CC
+      INTEGER*4 NTET,NPRD,NWED,NHEX
+      INTEGER*4 NSKIP1,NSKIP2,NSKIP3,NSKIP4 
+      PARAMETER (NTET=4,NSKIP1=NTET*NTET)
+      PARAMETER (NPRD=5,NSKIP2=NPRD*NPRD)
+      PARAMETER (NWED=6,NSKIP3=NWED*NWED)
+      PARAMETER (NHEX=8,NSKIP4=NHEX*NHEX)
+      REAL*4,ALLOCATABLE::CM(:),
+     *       SNI(:,:),DNXI(:,:),DNYI(:,:),DNZI(:,:),
+     *       SN(:,:),DNXYZ(:,:,:),
+     *       E(:),EX(:),EY(:),EZ(:),
+     *       EXX(:),EYY(:),EZZ(:),EXY(:),EXZ(:),EYZ(:)
+CC
+CC [B.03] ELEMENT'S CONNECTIVITY AND ATTRIBUTE LISTS
+CC
+      INTEGER*4,ALLOCATABLE::
+     *       NODE(:,:),
+     *       IENP(:,:),JENP(:,:),NEP(:),
+     *       IPNP(:,:),
+     *       NPP(:),NPP2(:),
+     *       NUMIP(:),LTAB(:,:,:)
+      INTEGER*4 NPPMAX
+     
+C
+      INTEGER*4 N2D,NS,NSP
+      PARAMETER (N2D=4, NS=6, NSP=4)
+      INTEGER*4 LOCAL(NSP,NS,4)
+      DATA LOCAL /
+     *     1,2,4,0,  2,3,4,0,  3,1,4,0,  1,3,2,0,  0,0,0,0,  0,0,0,0, ! TET
+     *     1,2,5,0,  2,3,5,0,  3,4,5,0,  4,1,5,0,  1,4,3,2,  0,0,0,0, ! PYR
+     *     1,3,2,0,  4,5,6,0,  1,2,5,4,  2,3,6,5,  3,1,4,6,  0,0,0,0, ! PRS
+     *     1,5,8,4,  2,3,7,6,  1,2,6,5,  3,4,8,7,  1,4,3,2,  5,6,7,8  ! HEX
+     *           /
+CC
+CC [B.04] ARRAYS FOR SPECIFYING BOUNDARY CONDITIONS
+CC
+      INTEGER*4,ALLOCATABLE::
+     *       LPINLT(:),
+     *       LPWALL(:),
+     *       LPSYMT(:),
+     *       LPFREE(:),
+     *       LPCCL1(:),LPCCL2(:),LPBODY(:),
+     *       LPINT1(:),LPINT2(:),LPINT3(:),
+     *       LDOM(:),NBPDOM(:),IPSLF(:,:),IPSND(:,:)
+
+      REAL*4,ALLOCATABLE::
+     *       UINLT (:),VINLT (:),WINLT (:),
+     *       UWALL (:),VWALL (:),WWALL (:),
+     *       XPSYMT(:),YPSYMT(:),ZPSYMT(:)
+C
+      INTEGER*4 NPINLT,NPWALL,NPSYMT,NPFREE,NPCCL,
+     *          NPBODY,NPINT, 
+     *          NDOM,
+     *          NPMVB,NPSYM2
+C
+      DATA NPINLT /0/
+      DATA NPWALL /0/
+      DATA NPSYMT /0/
+      DATA NPFREE /0/
+      DATA NPCCL  /0/
+      DATA NPBODY /0/
+      DATA NPINT  /0/
+      DATA NPMVB  /0/
+      DATA NPSYM2 /0/
+C
+      INTEGER*4 NPSET,NPSETR
+      INTEGER*4 NESET
+      DATA NPSET  /0/
+      DATA NPSETR /0/
+      DATA NESET  /0/
+      INTEGER*4 NGAT,NSCT
+      DATA NGAT  /0/
+      DATA NSCT  /0/
+CC
+CC [FLUID FORCE OBJECT] 
+CC
+CC [B.05] ARRAYS FOR SAVING TIME HISTORY
+CC
+CC [B.06] WORK REGION (MATRIX SOLVER)
+CC
+      INTEGER*4 NCRS,NCRS2
+      INTEGER*4,ALLOCATABLE:: IPCRS(:),ITPCRS(:)
+      REAL*4,ALLOCATABLE:: 
+     *       AWRK(:,:,:),ACRS (:),TACRS(:)
+CC
+CC [B.07] WORK REGION (REFINER I.F.)
+CC
+      INTEGER*4,ALLOCATABLE::
+     *       NPB0(:),NPB1(:),NPB2(:),LPB1(:,:),LPB2(:,:)
+      REAL*4,ALLOCATABLE:: XPB1(:,:),XPB2(:,:),
+     *                     YPB1(:,:),YPB2(:,:),
+     *                     ZPB1(:,:),ZPB2(:,:)
+CC
+CC [B.08] WORK REGION (OTHER)
+CC
+      INTEGER*4,ALLOCATABLE::
+     *       NODWK1(:,:),LEWRK(:,:),
+     *       LWRK01(:),LWRK02(:),LWRK04(:)
+      REAL*4,ALLOCATABLE::
+     *       RX(:,:),RY(:,:),WRKN(:),
+     *       WRK01(:),WRK02(:),WRK03(:),WRK04(:),
+     *       WRK05(:),WRK06(:),WRK07(:),WRK08(:),
+     *       WRK09(:),WRK10(:),WRK11(:),WRK12(:),
+     *       WRK13(:),WRK3(:,:)
+      REAL*8,ALLOCATABLE::
+     *       DWRK01(:,:),DWRK02(:),DWRK03(:,:,:),
+     *       DWRK04(:,:),DWRK05(:)
+#ifndef NO_REFINER
+      INTEGER*4,ALLOCATABLE::
+     *       NODWK2(:,:),NODWK3(:,:),
+     *       LWRK03(:),LWRK05(:),LWRK06(:)
+      REAL*8,ALLOCATABLE::
+     *       DWRK3(:)
+#endif
+CC
+CC [B.09] SIMPLE METHOD
+CC
+      REAL*4 EPSREP
+      REAL*4,ALLOCATABLE::
+     *       DT3D(:),UE(:),VE(:),WE(:)
+CC
+CC [B.XX]
+      REAL*4 ave_p, ave_v, max_v
+C
+C
+CLES3X----------------------------------------------------------CLES3X
+CCCCCC      CONSTANTS DEFINITION (WORK)                         CCCCCC
+CLES3X----------------------------------------------------------CLES3X
+C
+      INTEGER*4 IPART,NPART,MAXBUF,
+     *          NECHK,NPCHK1,NPCHK2,
+     *          IDUM,INTPRN,
+     *          I,J,IE,IELM,NELM,MELM,IP,NPW,IPW,NP0,NE0,
+     *          ITIME,
+     *          IBP,NITRP,NPZERO,NTIMEP,
+     *          ISTEP,
+     *          NITRU,NITRV,NITRW,NDUM,IRBUF,IONE
+      REAL*4    SIZEAL,SIZE,
+     *          TIME,DEVLP1,DEVLP2,ACCELX,ACCELY,ACCELZ,
+     *          RESU,RESV,RESW,RESP,
+     *          DIVMAX,DIVAV,XDIVMX,YDIVMX,ZDIVMX,FJESC,FJESCA,
+     *          DIVESC,WORD,FINITE,TIMEP,TIMEW,FRBUF
+#ifndef NO_REFINER
+      INTEGER*4 IRFN
+#endif
+C
+      DATA WORD   / 4.0E-6  /
+      DATA FINITE / 1.0E-20 /
+      DATA DIVMAX / 0.0E+0 /
+      DATA DIVESC / 1.0E+4 /
+      DATA XDIVMX / 0.0E0 /
+      DATA YDIVMX / 0.0E0 /
+      DATA ZDIVMX / 0.0E0 /
+      DATA TIMEP  / 0.E0 /
+      DATA NTIMEP / 0 /
+      DATA NITRU,NITRV,NITRW,NITRP / 0,0,0,0 /
+      DATA NPW    /0/
+C
+      DATA RESU /1.0E-10/
+      DATA RESV /1.0E-10/
+      DATA RESW /1.0E-10/
+      DATA RESP /1.0E-10/
+C
+      DATA NECHK  /0/
+      DATA NPCHK1 /0/
+      DATA NPCHK2 /0/
+C
+C
+C**********************************************************************
+C*                                                                    *
+C*                                                                    *
+C*                    <<<<< PROGRAM LES3X >>>>>                       *
+C*                                                                    *
+C*                                                                    *
+C*     ENTRY NAME        ; LES3X                                      *
+C*     FUNCTION          ; TO INTEGRATE 3-D UNSTEADY INCOMPRESSIBLE   *
+C*                        NAVIER-STOKES EQUATIONS BY FINITE ELEMENT   *
+C*                        METHODS                                     *
+C*                            ( SINGLE-PRECISION WORD VERSION )       *
+C*     EXECUTION MODE    ; SERIAL(SCALAR, VECTOR)/PARALLEL(THREAD,MPI)*
+C*     EXTRENAL LIBRARIES; 'MPI' IS CALLED FOR PARALLEL COMPUTATION   *
+C*     WRITTEN BY      ; C.KATO,                                      *
+C*                       INSTITUTE OF INDUSTRIAL SCIENCE,             *
+C*                       THE UNIVERSITY OF TOKYO.                     *
+C*     MODIFIED BY     ; Y.GUO,                                       *
+C*                       INSTITUTE OF INDUSTRIAL SCIENCE,             *
+C*                       THE UNIVERSITY OF TOKYO.                     *
+C*     MODIFIED BY     ; Y.YAMADE,                                    *
+C*                       INSTITUTE OF INDUSTRIAL SCIENCE,             *
+C*                       THE UNIVERSITY OF TOKYO.                     *
+C*                       (MIZUHO INFORMATION & RESEACH INSTITUTE INC.)*
+C*     COPY RIGHT      ; SEPTEMBER 14TH, 1988 BY HITACHI, LTD.        *
+C*                       APRIL     22ND, 2001 BY UNIVERSITY OF TOKYO  *
+C*                       JUNE       3RD, 2003 BY UNIVERSITY OF TOKYO  *
+C*                       JUNE       3RD, 2010 BY UNIVERSITY OF TOKYO  *
+C*                                                                    *
+C**********************************************************************
+C
+C >>>>> PROGRAM FUNCTIONS <<<<<
+C        'LES3X' IS A GENERAL-PURPOSE FINITE ELEMENT PROGRAM THAT
+C       CALCULATES INCOMPRESSIBLE UNSTEADY FLOWS IN ARBITRARILY-SHAPED
+C       GEOMETRIES. THE GOVERNING EQUATIONS ADOPTED FOR THE COMPUTATION
+C       ARE UNSTEADY INCOMPRESSIBLE NAVIER-STOKES EQUATIONS
+C       REPRESENTED IN THE CARTETIAN COORDINATES SYSTEM. IT SUPPORTS 
+C       MULTI ELEMENT TYPE.
+C
+C
+C >>>>> FILE ALLOCATIONS <<<<<
+C
+C          ALL THE FILES THAT 'LES3X' HANDLES ARE OF GENERAL FILE
+C         VERSION 1.1 FORMAT.
+C
+C   (1) STANDARD ERROR-OUTPUT/INPUT/OUTPUT
+C       IUT0 ( OUTPUT ); FILE NUMBER TO WRITE ERROR MESSAGE
+C       IUT5 (  INPUT ); FILE NUMBER TO READ  CALCULATION PARAMETERS
+C                       AND FILE NAMES
+C       IUT6 ( OUTPUT ); FILE NUMBER TO WRITE CALCULATION SEQUENCE
+C
+C   (2) PROGRAM-DEFAULT INPUT/OUTPUT
+C
+C       NOTES ; FOLLOWING FILES MUST ALWAYS BE SPECIFIED IN THE ORDER
+C              LISTED BELOW IN THE PARAMETER FILE. THEY WILL ALWAYS BE
+C              INPUT/OUTPUT DURING THE EXECUTION, EXCEPT THE INITIAL
+C              FLOW FIELD FILE, WHICH WILL BE INPUT ONLY WHEN CONTROL
+C              PARAMETER 'ISTART' (DESCRIBED LATER) IS SET TO 1. VALUE.
+C
+C       IUTMS(  INPUT ); FILE NUMBER TO READ  MESH DATA
+C       IUTBC(  INPUT ); FILE NUMBER TO READ  BOUNDARY CONDITIONS
+C       IUTIF(  INPUT ); FILE NUMBER TO READ  INITIAL FLOW FIELD
+C       IUTFF( OUTPUT ); FILE NUMBER TO WRITE FINAL   FLOW FIELD
+C
+C       FILEMS( INPUT ); FILE NAME   TO READ  MESH DATA
+C       FILEBC( INPUT ); FILE NAME   TO READ  BOUNDARY CONDITIONS
+C       FILEIF( INPUT ); FILE NAME   TO READ  INITIAL FLOW FIELD
+C       FILEFF(OUTPUT ); FILE NAME   TO WRITE FINAL   FLOW FIELD
+C       FILEHS(OUTPUT ); FILE NAME   TO WRITE TIME HISTORIES
+C
+C   (3) OPTIONAL INPUT/OUTPUT
+C
+C >>>>> VARIABLES AND CONSTANTS USED <<<<<
+C       (1) CONTROL VARIABLES
+C          IPART       ; DOMAIN NUMBER THAT THIS TASK SHOULD COMPUTE/IS
+C                       COMPUTING. IPART BEING SET ZERO MEANS THAT
+C                       THE PROGRAM SHOULD RUN/IS RUNNING IN SERIAL
+C                       MODE.
+C
+C          IWRITE      ; INFORM GF UTILITIES OF OUTPUT MODE
+C          INAME       ; INFORM GF UTILITIES OF VARIABLE NAME MODE
+C          MAXPRN      ; MAXIMUM TIME STEPS TO BE PRINTED OUT
+C          DT          ; TIME INCREMENT
+C           NOTES ; TIME INCREMENT WILL BE KEPT CONSTANT TO THE
+C                  SPECIFIED VALUE THROUGHOUT THE TIME INTEGRATION.
+C          VISCM       ; MOLECULAR VISCOSITY
+C
+C          EPSP        ; CONVERGENCE CRITERIA   FOR PRESSURE  EQUATION
+C          NMAXP       ; MAXIMUM ITERATIONS     FOR PRESSURE  EQUATION
+C          EPST        ; CONVERGENCE CRITERIA   FOR TRANSPORT EQUATIONS
+C          NMAXT       ; MAXIMUM ITERATIONS     FOR TRANSPORT EQUATIONS
+C
+C           NOTES ; USER INPUT PARAMETERS 'EPST' AND 'NMAXT' ARE
+C                  CONCERNED WITH THE TRANSPORT EQUATIONS THAT ARE
+C                  SOLVED IMPLICITLY AND ARE NEEDED ONLY FOR IFORM=3 AND
+C                  IFORM=4. IF YOU SELECT AN EXPLICIT FORMULATION
+C                  BY SPECIFYING EITHER IFORM=0, 1, OR 2, PROVIDE DUMMY
+C                  VALUES FOR THESE PARAMETERS.
+C
+C          NTIME       ; TIME STEPS TO BE INTEGRATED
+C
+C          ISTART      ; CONTROLS DEVELOPMENT OF THE FLOW FIELD
+C                   0 --- SET  ZERO INITIAL FLOW FIELD
+C                   1 --- READ INITIAL FLOW FROM GIVEN FILE
+C          TFINAL      ; FLOW FIELD DEVELOPMENT PARAMETER (SEE BELOW)
+C          UFINAL      ; FLOW FIELD DEVELOPMENT PARAMETER (SEE BELOW)
+C          VFINAL      ; FLOW FIELD DEVELOPMENT PARAMETER (SEE BELOW)
+C          WFINAL      ; FLOW FIELD DEVELOPMENT PARAMETER (SEE BELOW)
+C
+C                   IN TERMS OF THE FLOW FIELD DEVELOPMENT, ISTART=0
+C                  IS IDENTICAL TO ISTART=1, EXCEPT THAT THE FORMER
+C                  SETS ZERO INITIAL FLOW FIELD WHILE THE LATTER READS
+C                  INITIAL FLOW FILED FROM A GIVEN FILE. THE FOLLOWING
+C                  EXPLANATION WILL BE APPLICABLE BOTH FOR ISTART=0 AND
+C                  ISTART=1.
+C
+C                   THOSE VALUES LISTED BELOW WILL BE EXPONENTIALLY
+C                  DEVELOPED. NAMELY, AT EACH TIME STEP THEY WILL BE SET
+C                  TO A VALUE THAT IS THE ORIGINAL VALUE MULTIPLIED BY
+C                  THE FOLLOWING FUNCTION.
+C
+C                      VALUES GRADUALLY DEVELOPED:
+C                          INLET BOUNDARY VELOCITIES
+C                          MOVING WALL BOUNDARY VELOCITIES
+C                          ANGULAR VELOCITY
+C                          FRAME VELOCITIES FOR TRANSLATING FRAMES
+C                          (FRAME ACCELERATION FOR FRAME NUMBER 1)
+C
+C                      FUNCTION APPLIED: 1-EXP(-TIME/TFINAL)
+C
+C                  WHERE 'TIME' IS THE CURRENT TIME OF THE INTEGRATION
+C                  AND 'TFINAL' IS A USER INPUT PARAMETER TO CONTROL
+C                  FLOW FIELD DEVELOPMENT. IF NO FURTHER DEVELOPMENT
+C                  OF THE FLOW FIELD IS DESIRED, SIMPLY SET 'TFINAL'
+C                  TO ZERO AND THIS FUNCTION WILL BECOME A CONSTANT
+C                  VALUE OF ONE. THE DIVIDE EXCEPTION WILL BE INTERNALLY
+C                  SUPPRESSED AND HENCE DOES NOT NEED TO BE TAKEN CARE
+C                  BY THE USER.
+C
+C                   FOLLOWING UNIFORM ACCELERATION TERMS WILL ALSO BE
+C                  ADDED TO THE MOMENTUM EQUATIONS FOR TRANSLATING
+C                  FRAMES WITH FRAME NUMBER GREATER THAN 1
+C                  (SEE ALSO NOTES ON 'NFRAME').
+C
+C                      ACCELERATION TERMS ADDED TO X, Y, Z DIRECTIONS:
+C                         (UFINAL-UFRME0(IFRM))/TFINAL*EXP(-TIME/TFINAL)
+C                         (VFINAL-VFRME0(IFRM))/TFINAL*EXP(-TIME/TFINAL)
+C                         (WFINAL-WFRME0(IFRM))/TFINAL*EXP(-TIME/TFINAL)
+C
+C                  WHERE 'UFRME0(IFRM)', 'VFRME0(IFRM)', AND
+C                  'WFRME0(IFRM)' ARE THE FRAME VELOCITIES SET FOR
+C                  MULTIFRAME COMPUTATIONS (DESCRIBED ELSEWHERE). NOTE
+C                  THAT THESE ACCELERATION TERMS ARE CONSISTENT WITH THE
+C                  ABOVE MENTIONED DEVELOPMENT FUNCTION.
+C
+C          DEVLP1      ; FUNCTION APPLIED FOR BOUNDARY VALUES, ANGULAR
+C                       VELOCITY AND FRAME VELOCITY.
+C          DEVLP2      ; FUNCTION APPLIED FOR ACCELERATIONS
+C          ACCELX      ; X-DIR. ACCELERATION TERMS ADDED TO ALL FRAMES
+C          ACCELY      ; Y-DIR. ACCELERATION TERMS ADDED TO ALL FRAMES
+C          ACCELZ      ; Z-DIR. ACCELERATION TERMS ADDED TO ALL FRAMES
+C
+C       (2) PROGRAM-DEFAULT MODEL CONSTANTS
+C
+C
+C       (3) INTEGER CONSTANTS
+C          ME          ; MAX. NUMBER OF TOTAL ELEMENTS
+C          MP          ; MAX. NUMBER OF TOTAL NODES
+C          MB          ; MAX. NUMBER OF BOUNDARY NODES
+C
+C          MDOM        ; MAX. NUMBER OF THE SENDING/RECEIVING DOMAINS
+C          MBPDOM      ; THE MAXIMUM NUMBER OF INTER-CONNECT/OVERSET
+C                       BOUNDARY NODES FOR ONE NEIGHBORING DOMAIN.
+C
+C          MWRK        ; DIMENSION SIZE OF WORK AREA ( = MP )
+C          MAXBUF      ; DIMENSION SIZE OF WORK RX, RY ( = ME*N )
+C
+C          NE          ; NUMBER OF TOTAL ELEMENTS
+C          NP          ; NUMBER OF TOTAL    NODES
+C          N0          ; NUMBER OF NODES ASSIGNED TO ONE ELEMENT ( = 8 )
+C
+C       (4) FIELD VARIABLES
+C          X       (IP); X-COORDINATES OF NODES
+C          Y       (IP); Y-COORDINATES OF NODES
+C          Z       (IP); Z-COORDINATES OF NODES
+C
+C          SX      (IE); UPWIND VECTOR IN X-DIR.
+C          SY      (IE); UPWIND VECTOR IN Y-DIR.
+C          SZ      (IE); UPWIND VECTOR IN Z-DIR.
+C
+C          U       (IP); X-DIR. VELOCITY COMPONENT AT NODES
+C          V       (IP); Y-DIR. VELOCITY COMPONENT AT NODES
+C          W       (IP); Z-DIR. VELOCITY COMPONENT AT NODES
+C          P       (IE); ELEMENT PRESSURE
+C          PN      (IP); NODAL   PRESSURE
+C
+C           NOTES ; SINCE CURRENT GF SYSTEM HAS ONLY ONE TYPE OF DATA
+C                  FOR FLOW VELOCITY AND PRESSURE, ALL THE VELOCITIES
+C                  AND PRESSURES ABOVE WILL BE SAVED WITH A SAME KEY
+C                  WORD '*VELO_3D' AND '*PRES_3E'.
+C
+C           NOTES ; IN ORDER TO KEEP CONSISTENCY WITH THE FLOW FIELD
+C                  DATA GENERATED BY THE CONVENTIONAL 'LES3D', 'LES3X'
+C                  INPUTS/OUTPUTS ELEMENT-WISE PRESSURE. IT WILL CONVERT
+C                  THE READ-IN ELEMENT-WISE PRESSURE TO NODAL VALUE FOR
+C                  ITS INTERNAL USE AND RE-CONVERT THE NODAL PRESSURE TO
+C                  ELEMENT-WISE VALUE FOR OUTPUTING TO A GENERAL FILE.
+C
+C       (5) ELEMENT'S POSITION AND SHAPE DEPENDENT CONSTANTS
+C          CM      (IP); INVERSED LUMPED MASS MATRIX
+C
+C          SNI   (I,IE); ELEMENT CENTER VALUE OF N
+C          DNXI  (I,IE); ELEMENT CENTER VALUE OF NX
+C          DNYI  (I,IE); ELEMENT CENTER VALUE OF NY
+C          DNZI  (I,IE); ELEMENT CENTER VALUE OF NZ
+C
+C          SN    (I,IE); INTEGRATED ELEMENT VECTOR OF N
+C          DNX   (I,IE); INTEGRATED ELEMENT VECTOR OF NX
+C          DNY   (I,IE); INTEGRATED ELEMENT VECTOR OF NY
+C          DNZ   (I,IE); INTEGRATED ELEMENT VECTOR OF NZ
+C
+C          E   (IE,I,J); INTEGRATED ELEMENT MATRIX OF N*NT
+C          EX  (I,IE,J); INTEGRATED ELEMENT MATRIX OF N*NXT
+C          EY  (I,IE,J); INTEGRATED ELEMENT MATRIX OF N*NYT
+C          EZ  (I,IE,J); INTEGRATED ELEMENT MATRIX OF N*NZT
+C          EXX (I,IE,J); INTEGRATED ELEMENT MATRIX OF NX*NXT
+C          EYY (I,IE,J); INTEGRATED ELEMENT MATRIX OF NY*NYT
+C          EZZ (I,IE,J); INTEGRATED ELEMENT MATRIX OF NZ*NZT
+C          EXY (I,IE,J); INTEGRATED ELEMENT MATRIX OF NX*NYT
+C          EXZ (I,IE,J); INTEGRATED ELEMENT MATRIX OF NX*NZT
+C          EYZ (I,IE,J); INTEGRATED ELEMENT MATRIX OF NY*NZT
+C           NOTES ; IN THE ABOVE LISTS, N DENOTES THE SHAPE FUNCTION.
+C                  NX, NY, NZ, RESPECTIVELY DENOTE, X-DERIVERTIVE,
+C                  Y-DERIVERTIVE, AND Z-DERIVERTIVE OF SHAPE FUNCTION.
+C           NOTES ; E   (IE,I,J) IS ALSO USED  AS ELEMENT-WISE
+C                   COEFFICIENT MATRIX
+C
+C       (6) ELEMENT'S CONNECTIVITY SPECIFYING LISTS
+C          NODE  (I,IE); NODE NO. TABLE BASED ON ELEMENT
+C          NODE2 (I,IE); NODE NO. TABLE BASED ON ELEMENT
+C                        (DUMMY VARIABLE FOR READING MESH DATA)
+C          NUMIP   (IP); NUMBER OF NEIGHBORING DOMAINS THAT NODE
+C                        'IP' BELONG TO
+C
+C
+C       (7) BOUNDARY CONDITIONS DATA
+C        A. INLET BOUNDARY
+C          NPINLT      ; NUMBER OF INLET BOUNDARY NODES
+C          LPINLT (IBP); INLET BOUNDARY NODES
+C          UINLT  (IBP); INLET BOUNDARY U-VELOCITIES
+C          VINLT  (IBP); INLET BOUNDARY V-VELOCITIES
+C          WINLT  (IBP); INLET BOUNDARY W-VELOCITIES
+C
+C        B. WALL BOUNDARY
+C          NPWALL      ; NUMBER OF WALL BOUNDARY NODES
+C          LPWALL (IBP); WALL BOUNDARY NODES
+C          UWALL  (IBP); WALL BOUNDARY U-VELOCITIES
+C          VWALL  (IBP); WALL BOUNDARY V-VELOCITIES
+C          WWALL  (IBP); WALL BOUNDARY W-VELOCITIES
+C
+C        C. SYMMETRIC BOUNDARY
+C          NPSYMT      ; NUMBER OF SYMMETRIC BOUNDARY NODES
+C          LPSYMT (IBP); SYMMETRIC BOUNDARY NODES
+C          XPSYMT (IBP); X NORMAL OF SYMMETRIC BOUNDARY NODE
+C          YPSYMT (IBP); Y NORMAL OF SYMMETRIC BOUNDARY NODE
+C          ZPSYMT (IBP); Z NORMAL OF SYMMETRIC BOUNDARY NODE
+C
+C        D. FREE BOUNDARY
+C          NPFREE      ; NUMBER OF FREE BOUNDARY NODES
+C          LPFREE (IBP); FREE BOUNDARY NODES
+C
+C        E. CYCLIC BOUNDARY
+C          NPCCL       ; NUMBER OF CYCLIC BOUNDARY NODES
+C          LPCCL1 (IBP); CYCLIC BOUNDARY NODES-1
+C          LPCCL2 (IBP); CYCLIC BOUNDARY NODES-2
+C
+C        F. FLUID FORCE CALCULATION SURFACE
+C          NPBODY      ; NUMBER OF BODY SURFACE NODES
+C          LPBODY (IBP); BODY SURFACE NODES
+C          N2D          ;NUMBER OF SURFACE ELEMENT DEFINING NODES ( =4 )
+C           NOTES; WALL SHEAR COMPONENTS OF BODY FORCE WILL BE DIRECTLY
+C                 CALCULATED BASED ON THE LOCAL TOTAL VISCOSITY AND
+C                 LOCAL VELOCITY GRADIENT WITHOUT TAKING INTO ACCOUNT
+C                 THE WALL VELOCITIES NOR THE WALL FUNCTION USED FOR THE
+C                 MOMENTUM INTEGRATION.
+C
+C        G. INTER-CONNECT BOUNDARY
+C          NPINT       ; NUMBER OF INTER-CONNECT BOUNDARY NODES
+C          LPINT1 (IBP); INTER-CONNECT BOUNDARY NODES
+C          LPINT2 (IBP); CORRESPONDING DOMAIN NUMBERS
+C          LPINT3 (IBP); NODE NUMBER IN THE CORRESPONDING DOMAINS
+C          NDOM        ; NUMBER OF THE NERIBERING DOMAINS
+C          LDOM  (IDOM); NEIGHBORING DOMAIN NUMBER
+C          NBPDOM(IDOM); NUMBER OF INTER-CONNECT BOUNDARY NODES
+C                       SHARING WITH THE IDOM'TH NEIGHBORING DOMAIN,
+C                       LDOM(IDOM)
+C          IPSLF (IBP,IDOM); INTER-CONNECT BOUNDARY NODE NUMBER IN THE
+C                           CALLING TASK'S DOMAIN, FOR THE IDOM'TH
+C                           NEIGHBORING DOMAIN, LDOM(IDOM)
+C          IPSND (IBP,IDOM); INTER-CONNECT BOUNDARY NODE NUMBER IN THE
+C                           DOMAIN THAT IS RECEIVING THE CALLING
+C                           TASK'S RESIDUALS.
+C
+C        H. OVERSET BOUNDARY NODES
+C
+C        I. FLUID FORCE OBJECT (FFO)
+C          
+C
+C       (8) TIME HISTORY DATA
+C
+C       (13) COMMENT DATA
+C          COMGEN      ; GENERIC  FILE COMMENT STRING TO BE READ FROM
+C                       PARAMETER FILE AT THE START OF TIME INTEGRATION
+C                       AND TO BE WRITTEN TO ALL THE OUTPUT FILES
+C          COMFLE(ICOM); WORK ARRAY USED TO PASS FILE COMMENT
+C                        STRINGS TO GENERAL FILE UTILITIES
+C          COMSET(ICOM); DUMMY ARRAY USED TO CALL GENERAL FILE UTILITIES
+C
+C           NOTES ; FOR INPUT FILES, ALL THE FILE COMMENT STRINGS AND
+C                  ALL THE SET COMMENT STRINGS WILL BE DISCARDED IN THE
+C                  GENERAL FILE UTILITIES AFTER THEY ARE WRITTEN TO THE
+C                  STANDARD OUTPUT. FOR OUTPUT FILES GENERIC FILE
+C                  COMMENT STRING READ FROM THE PARAMETER FILE, FOLLOWED
+C                  BY SPECIFIC FILE COMMENT STRINGS INTERNALLY DEFINED,
+C                  WILL BE WRITTEN TO EACH OUTPUT FILE.
+C                   NO SET COMMENT STRINGS WILL BE WRITTEN TO THE OUTPUT
+C                  FILES EXCEPT THE CURRENT FLOW FIELD FILE, SURFACE
+C                  PRESSURE DATA FILE, AND HISTORY DATA FILE TO WHICH
+C                  INTERNALLY DEFINED SET COMMENT STRINGS (INDICATING
+C                  CURRENT TIME AND TIME STEP OR IDENTIFYING EACH
+C                  HISTORY DATA), WILL BE WRITTEN.
+C
+C
+C      (14) WORK AREAS AND DUMMY ARRAYS
+C
+C
+C      (15) RETURN CODE
+C          IERR        ; RETURN CODE WHOSE VALUE WILL BE EITHER
+C                   0 --- INDICATING SUCCESSFUL TERMINATION
+C                OR 1 --- INDICATING OCCURENCE OF SOME ERROR CONDITIONS
+C
+C
+C
+C            <<<<< QUERY EXECUTION MODE AND DOMAIN NUMBER >>>>>
+C
+C
+C
+C     NDOM = 0
+      CALL DDINIT(NPART,IPART)
+C     IF(IPART.GE.1) NDOM = 1
+C
+      IF(IPART.GE.2) THEN
+          IUT6 = IUTLG
+          CALL MFNAME(FILELG,FILE,IPART,IUT0,IERR)
+          IF(IERR.NE.0) THEN
+              WRITE(IUT0,*) BLANK
+              WRITE(IUT0,*) ERMSGC
+              GO TO 9999
+          ENDIF
+          OPEN(IUT6,FILE=FILE,FORM='FORMATTED')
+      ENDIF
+C
+      call opening(IUT6, DATE, FILEIN)
+C
+#ifdef PROF_MAPROF
+      call maprof_setup("FFB MINI", FFB_MINI_VERSION)
+      call maprof_add_section("Main_Loop",  TM_MAIN_LOOP)
+      call maprof_add_section("vel3d1_op1", TM_VEL3D1_OP1)
+      call maprof_add_section("calax3_cal", TM_CALAX3_CAL)
+      call maprof_add_section("calax3_com", TM_CALAX3_COM)
+      call maprof_add_section("grad3x",     TM_GRAD3X)
+      call maprof_add_section("fld3x2",     TM_FLD3X2)
+#endif
+C
+C
+C            <<<<< DISPLAY INTERNAL PARAMETER SETTINGS >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'CONSTANTS REGARDING NUMERICAL METHOD'
+      WRITE(IUT6,*) ' NUMBER OF GAUSS POINTS FOR HEX. : IGAUSH=', IGAUSH
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'CONSTANTS REGARDING OUTPUT'
+      WRITE(IUT6,*) ' FILE WRITING MODE FLAG          : IWRITE=', IWRITE
+      WRITE(IUT6,*) ' MAX. TIMESTEPS TO BE PRINTED-OUT: MAXPRN=', MAXPRN
+      WRITE(IUT6,*) ' EMERGENLY ESCAPE DIVERGENT LIMIT: DIVESC=', DIVESC
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' CONSTANTS REGARDING MATRIX SOLVER'
+      WRITE(IUT6,*) ' MATRIX SOLVER FOR PRESSURE      : ISOLP =', ISOLP
+      WRITE(IUT6,*) ' INNER ITERATIONS NUMBER OF RCM  : NMAXB =', NMAXB
+C
+C
+C            <<<<< READ CALCULATION PARAMETERS AND FILE NAMES
+C                 TO ALLOCATE                                    >>>>>
+C
+C
+      OPEN(IUT5,FILE=FILEIN,FORM='FORMATTED')
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** READING CALCULATION PARAMETERS **'
+      IACT=1
+      CALL LESRPX(IACT,IUT0,IUT5,IUT6,IPART,COMGEN,
+     *            IFORM ,
+     *            D000  ,U000  ,RHO000,
+     *            VISCM ,
+     *            ISTART,NTIME ,DT    ,
+     *            NMAXT ,NMAXP ,EPST  ,EPSP  ,
+     *            TFINAL,UFINAL,VFINAL,WFINAL,
+     *            FILEMS,FILEBC,FILEIF,FILEFF,FILEHS,
+     *            FILEMR,FILEBR,FILEFR,IERR)
+C
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+      INTPRN = MAX(1,NTIME/MAXPRN)
+      WRITE(IUT6,*) ' DONE!'
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** READING OPTIONAL PARAMETERS **'
+      CALL LESROP(IUT0,IUT5,IUT6,
+     *            ISOLP,
+     *            NMAXB,
+     *            BTDCOE,DIVESC,
+     *            JSORT,JCOLOR,JUNROL,NDIVX,NDIVY,NDIVZ,NEIP,
+     *            NRFN,IRFNMW,IRFNFF,NGRID,
+     *            MER,MPR,MEPR,MPPR,MBR,MBPR,MDOMR,
+     *            JPRESS,IVELIN,VELIN0,
+     *            U000,
+     *            EPSP,EPSREP,
+     *            IWRITE,JGRID,
+     *            IERR) 
+C
+      if (JPRESS .ne. 2) then
+          write(IUT6,*)  '## MINIAPP MUST BE SET "#PRS_ELM"'
+          goto 9999
+      end if
+C
+      CLOSE(IUT5)
+      WRITE(IUT6,*) ' DONE!'
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** CHECKING SIZE OF MESH DATA **'
+      IACT     = 1
+      IONE=1 
+      IF(JGRID.EQ.1) THEN
+          CALL GFALL(IUT0,IUT6,IUTMS,FILEMS,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP1,IERR,
+     *               '*GRID_3D *NODE_3D !',
+     *               NAME,IONE,NP,FRBUF,FRBUF,FRBUF,
+     *               NAME,IONE,IONE,NE,NDUM,IRBUF,
+     *               ICHECK)
+      ELSE
+          CALL GFALL(IUT0,IUT6,IUTMS,FILEMS,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP1,IERR,
+     *               '*GRID_3D%D *NODE_3D !',
+     *               NAME,IONE,NP,FRBUF,FRBUF,FRBUF,
+     *               NAME,IONE,IONE,NE,NDUM,IRBUF,
+     *               ICHECK)
+      ENDIF
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+
+      IF(IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) ' DONE!'
+C
+      NE_total = total(NE)
+      NP_total = total(NP)
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' TIME STEPS: ', NTIME
+      WRITE(IUT6,*) ' NUMBER OF ELEMENTS: ', NE
+      WRITE(IUT6,*) ' NUMBER OF NODES:    ', NP
+      WRITE(IUT6,*) ' NUMBER OF TOTAL ELEMENTS: ', NE_total
+      WRITE(IUT6,*) ' NUMBER OF TOTAL NODES:    ', NP_total
+#ifdef PROF_MAPROF
+      call maprof_profile_add_problem_size("Ne", NE_total)
+      call maprof_profile_add_problem_size("Np", NP_total)
+      call maprof_profile_add_problem_size("Nstep", NTIME)
+#endif
+C
+      ME=NE+1000
+      MP=NP+1000
+      MAXBUF = ME*N0
+C
+      IF(NRFN.EQ.1) THEN
+          ME=ME*8
+          MP=MP*8
+      ENDIF
+      IF(NRFN.EQ.2) THEN
+          ME=ME*64
+          MP=MP*64
+      ENDIF
+C
+      IF(MER .NE.-1) ME =MER
+      IF(MPR .NE.-1) MP =MPR
+      IF(MEPR.NE.-1) MEP=MEPR
+      IF(MPPR.NE.-1) MPP=MPPR
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR FIELD'
+C
+      IF(ME.GT.MP) THEN
+          MWRK=ME
+      ELSE
+          MWRK=MP
+      ENDIF
+C
+C
+      MB=MP/2
+      MBPDOM=MP/5
+      MDOM=32
+      IF(MBR  .NE.-1) MB    =MBR
+      IF(MBPR .NE.-1) MBPDOM=MBPR
+      IF(MDOMR.NE.-1) MDOM  =MDOMR
+C
+      MPWALL=MB
+      MPINT =MB
+      MPBODY=MB
+C  
+      SIZEAL = 0.E0
+C
+      SIZE   = (10*FLOAT(MP)+(2+2*MRCM)*FLOAT(ME))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " FIELD     :",SIZE
+      ALLOCATE( X(MP),    STAT=LERR(01))
+      ALLOCATE( Y(MP),    STAT=LERR(02))
+      ALLOCATE( Z(MP),    STAT=LERR(03))
+      ALLOCATE( U(MP),    STAT=LERR(04))
+      ALLOCATE( V(MP),    STAT=LERR(05))
+      ALLOCATE( W(MP),    STAT=LERR(06))
+      ALLOCATE(PN(MP),    STAT=LERR(07))
+      ALLOCATE( P(ME),    STAT=LERR(10))
+      ALLOCATE(VISC(ME),  STAT=LERR(11))
+      ALLOCATE( PRCM(MRCM,ME),STAT=LERR(12))
+      ALLOCATE(APRCM(MRCM,ME),STAT=LERR(13))
+      ALLOCATE(XD(MP),    STAT=LERR(14))
+      ALLOCATE(YD(MP),    STAT=LERR(15))
+      ALLOCATE(ZD(MP),    STAT=LERR(16))
+      CALL ERRCHK(IUT6,IPART,16,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR ELEMENT SHAPE '
+      SIZE   = (1*FLOAT(MP)+72*FLOAT(ME))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " ELEMENT   :",SIZE
+      ALLOCATE( SNI(N1,ME),STAT=LERR(01))
+      ALLOCATE(DNXI(N1,ME),STAT=LERR(02))
+      ALLOCATE(     CM(MP),STAT=LERR(03))
+      ALLOCATE(DNYI(N1,ME),STAT=LERR(04))
+      ALLOCATE(DNZI(N1,ME),STAT=LERR(05))
+      ALLOCATE(  SN(N1,ME),STAT=LERR(06))
+      ALLOCATE(DNXYZ(3,N1,ME),STAT=LERR(07))
+      CALL ERRCHK(IUT6,IPART,7,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR CONNECTIVITY'  
+      SIZE   = ((MEP*2+MPP+4)*FLOAT(MP)+81*FLOAT(ME))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " CONNECT   :",SIZE
+      ALLOCATE(NODE(N1,ME),   STAT=LERR(01))
+      ALLOCATE(IENP(MEP,MP),  STAT=LERR(02))
+      ALLOCATE(JENP(MEP,MP),  STAT=LERR(03))
+      ALLOCATE(NEP(MP),       STAT=LERR(04))
+      ALLOCATE(IPNP(MPP,MP),  STAT=LERR(05))
+      ALLOCATE(NPP(MP),       STAT=LERR(06))
+      ALLOCATE(NPP2(MP),      STAT=LERR(07))
+      ALLOCATE(NUMIP(MP),     STAT=LERR(08))
+      ALLOCATE(LTAB(N1,N2,ME),STAT=LERR(09))
+      CALL ERRCHK(IUT6,IPART,9,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR B.C.'
+      SIZE   = (19*FLOAT(MB)+(2*MBPDOM+2)*FLOAT(MDOM)
+     &         +2*FLOAT(ME)+2*FLOAT(MP))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " BOUNDARY  :",SIZE
+      ALLOCATE(LPINLT(MB),        STAT=LERR(01))
+      ALLOCATE(LPWALL(MB),        STAT=LERR(02))
+      ALLOCATE(LPSYMT(MB),        STAT=LERR(03))
+      ALLOCATE(LPFREE(MB),        STAT=LERR(04))
+      ALLOCATE(LPCCL1(MB),        STAT=LERR(05))
+      ALLOCATE(LPCCL2(MB),        STAT=LERR(06))
+      ALLOCATE(LPBODY(MB),        STAT=LERR(07))
+      ALLOCATE(LPINT1(MB),        STAT=LERR(08))
+      ALLOCATE(LPINT2(MB),        STAT=LERR(09))
+      ALLOCATE(LPINT3(MB),        STAT=LERR(10))
+      ALLOCATE(LDOM(MDOM),        STAT=LERR(11))
+      ALLOCATE(NBPDOM(MDOM),      STAT=LERR(12))
+      ALLOCATE(IPSLF(MBPDOM,MDOM),STAT=LERR(13))
+      ALLOCATE(IPSND(MBPDOM,MDOM),STAT=LERR(14))
+      ALLOCATE(UINLT (MB),        STAT=LERR(15))
+      ALLOCATE(VINLT (MB),        STAT=LERR(16))
+      ALLOCATE(WINLT (MB),        STAT=LERR(17))
+      ALLOCATE(UWALL (MB),        STAT=LERR(18))
+      ALLOCATE(VWALL (MB),        STAT=LERR(19))
+      ALLOCATE(WWALL (MB),        STAT=LERR(20))
+      ALLOCATE(XPSYMT(MB),        STAT=LERR(21))
+      ALLOCATE(YPSYMT(MB)        ,STAT=LERR(22))
+      ALLOCATE(ZPSYMT(MB)        ,STAT=LERR(23))
+      ALLOCATE(LPBTOA(MP)        ,STAT=LERR(24))
+      ALLOCATE(LPATOB(MP)        ,STAT=LERR(25))
+      ALLOCATE(LEBTOA(ME)        ,STAT=LERR(26))
+      ALLOCATE(LEATOB(ME)        ,STAT=LERR(27))
+      CALL ERRCHK(IUT6,IPART,27,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR WORK-1'
+      SIZE   = (0*FLOAT(MP)+72*FLOAT(ME))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " WORK-1    :",SIZE
+      ALLOCATE(AWRK(N1,N2,ME),STAT=LERR(01))
+      CALL ERRCHK(IUT6,IPART,01,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR WORK-2'
+      SIZE   = (3*FLOAT(MDOM)+8*FLOAT(MBPDOM*MDOM))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " WORK-2    :",SIZE
+      ALLOCATE(NPB0(MDOM),STAT=LERR(01))
+      ALLOCATE(NPB1(MDOM),STAT=LERR(02))
+      ALLOCATE(NPB2(MDOM),STAT=LERR(03))
+      ALLOCATE(LPB1(MBPDOM,MDOM),STAT=LERR(04))
+      ALLOCATE(LPB2(MBPDOM,MDOM),STAT=LERR(05))
+      ALLOCATE(XPB1(MBPDOM,MDOM),STAT=LERR(06))
+      ALLOCATE(YPB1(MBPDOM,MDOM),STAT=LERR(07))
+      ALLOCATE(ZPB1(MBPDOM,MDOM),STAT=LERR(08))
+      ALLOCATE(XPB2(MBPDOM,MDOM),STAT=LERR(09))
+      ALLOCATE(YPB2(MBPDOM,MDOM),STAT=LERR(10))
+      ALLOCATE(ZPB2(MBPDOM,MDOM),STAT=LERR(11))
+      CALL ERRCHK(IUT6,IPART,11,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR WORK-3'
+      SIZE   = (3*FLOAT(MP)+27*FLOAT(MWRK)+26*FLOAT(ME)
+     &         +37*2*FLOAT(MGAUSS))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " WORK-3    :",SIZE
+      ALLOCATE(NODWK1(N0,ME),STAT=LERR(01))
+      ALLOCATE(LEWRK(2,MWRK),STAT=LERR(02))
+      ALLOCATE(LWRK01(MWRK), STAT=LERR(03))
+      ALLOCATE(LWRK02(MWRK), STAT=LERR(04))
+      ALLOCATE(LWRK04(MWRK), STAT=LERR(05))
+      ALLOCATE(RX(N1,ME),    STAT=LERR(06))
+      ALLOCATE(RY(N1,ME),    STAT=LERR(07))
+      ALLOCATE(WRKN(MWRK*9), STAT=LERR(08))
+      ALLOCATE(WRK01(MWRK),  STAT=LERR(09))
+      ALLOCATE(WRK02(MWRK),  STAT=LERR(10))
+      ALLOCATE(WRK03(MWRK),  STAT=LERR(11))
+      ALLOCATE(WRK04(MWRK),  STAT=LERR(12))
+      ALLOCATE(WRK05(MWRK),  STAT=LERR(13))
+      ALLOCATE(WRK06(MWRK),  STAT=LERR(14))
+      ALLOCATE(WRK07(MWRK),  STAT=LERR(15))
+      ALLOCATE(WRK08(MWRK),  STAT=LERR(16))
+      ALLOCATE(WRK09(MWRK),  STAT=LERR(17))
+      ALLOCATE(WRK10(MWRK),  STAT=LERR(18))
+      ALLOCATE(WRK11(MWRK),  STAT=LERR(19))
+      ALLOCATE(WRK12(MWRK),  STAT=LERR(20))
+      ALLOCATE(WRK13(MWRK),  STAT=LERR(21))
+      ALLOCATE(WRK3(3,MP),   STAT=LERR(22))
+      ALLOCATE(DWRK01(N1  ,MGAUSS), STAT=LERR(23))
+      ALLOCATE(DWRK02(N1         ), STAT=LERR(24))
+      ALLOCATE(DWRK03(3,N1,MGAUSS), STAT=LERR(25))
+      ALLOCATE(DWRK04(3,N1       ), STAT=LERR(26))
+      ALLOCATE(DWRK05(     MGAUSS), STAT=LERR(27))
+      CALL ERRCHK(IUT6,IPART,27,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+#ifndef NO_REFINER
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR FEFINE'
+      SIZE   = (3*2*FLOAT(MP)+3*FLOAT(MWRK)+16*FLOAT(ME))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " WORK-RFN   ",SIZE
+      ALLOCATE(NODWK2(N0,ME),STAT=LERR(01))
+      ALLOCATE(LWRK03(MWRK), STAT=LERR(02))
+      ALLOCATE(LWRK05(MWRK), STAT=LERR(03))
+      ALLOCATE(LWRK06(MWRK), STAT=LERR(04))
+      ALLOCATE(NODWK3(N0,ME),STAT=LERR(05))
+      ALLOCATE(DWRK3(MP*3),  STAT=LERR(06))
+      CALL ERRCHK(IUT6,IPART,6,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+#endif
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR SIMPLE'
+      SIZE   = (0*FLOAT(MP)+4*FLOAT(ME))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " SIMPLE    :",SIZE
+      ALLOCATE(DT3D(ME),     STAT=LERR(01))
+      ALLOCATE(UE(ME),       STAT=LERR(02))
+      ALLOCATE(VE(ME),       STAT=LERR(03))
+      ALLOCATE(WE(ME),       STAT=LERR(04))
+      CALL ERRCHK(IUT6,IPART,4,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE'
+C
+C
+C            <<<<< READ MESH DATA >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** READING MESH DATA **'
+      IACT     = 1
+      IF(JGRID.EQ.1) THEN
+          CALL GFALL(IUT0,IUT6,IUTMS,FILEMS,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP,IERR,
+     *               '*GRID_3D *NODE_3D !',
+     *               NAME,MP,NP,X,Y,Z,
+     *               NAME,ME,N0,NE,NDUM,NODWK1,
+     *               ICHECK)
+CCTT  //NORMALIZATION
+          DO 920 IP=1, NP
+              X(IP)=X(IP)/D000
+              Y(IP)=Y(IP)/D000
+              Z(IP)=Z(IP)/D000
+              XD(IP)=DBLE(X(IP))
+              YD(IP)=DBLE(Y(IP))
+              ZD(IP)=DBLE(Z(IP))
+  920     CONTINUE
+C
+      ELSE
+          CALL GFALL(IUT0,IUT6,IUTMS,FILEMS,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP,IERR,
+     *               '*GRID_3D%D *NODE_3D !',
+     *               NAME,MP,NP,XD,YD,ZD,
+     *               NAME,ME,N0,NE,NDUM,NODWK1,
+     *               ICHECK)     
+CCTT  //NORMALIZATION
+          DO 925 IP=1, NP
+              XD(IP)=XD(IP)/DBLE(D000)
+              YD(IP)=YD(IP)/DBLE(D000)
+              ZD(IP)=ZD(IP)/DBLE(D000)
+              X (IP)=REAL(XD(IP))
+              Y (IP)=REAL(YD(IP))
+              Z (IP)=REAL(ZD(IP))
+  925     CONTINUE
+      ENDIF
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+      IF(IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+C
+      DO 900 IE=1,NE
+         DO 910 I=1,N0
+            NODE(I,IE)=NODWK1(I,IE)
+ 910     CONTINUE
+ 900  CONTINUE
+C
+      WRITE(IUT6,*) ' DONE!'
+C
+C
+C            <<<<< READ BOUNDARY CONDITIONS DATA >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** READING BOUNDARY CONDITIONS DATA **'
+      IACT     = 1
+      CALL GFALL(IUT0,IUT6,IUTBC,FILEBC,
+     *           MCOM,NCOMFL,COMFLE,
+     *           MCOM,NCOMST,COMSET,
+     *           IACT,IWRITE,INAME,IRESV,  
+     *           ICAST,IDATA0,IALL,ISKIP,IERR,
+     *           '*BC_INLT *BC_IV3D *BC_MWAL *BC_WV3D *BC_WALL
+     *            *BC_SYMT *BC_FREE *BC_CYCL *BC_BODY *BC_INTR !',
+     *           NAME,MB,NPINLT,LPINLT,
+     *           NAME,MB,NPINLT,UINLT,VINLT,WINLT,
+     *           NAME,MB,NPWALL,LPWALL,
+     *           NAME,MB,NPWALL,UWALL,VWALL,WWALL,
+     *           NAME,MB,NPW   ,LWRK01,
+     *           NAME,MB,NPSYMT,LPSYMT,
+     *           NAME,MB,NPFREE,LPFREE,
+     *           NAME,MB,NPCCL ,LPCCL1,LPCCL2,
+     *           NAME,MB,NPBODY,LPBODY,
+     *           NAME,MB,NPINT, LPINT1,LPINT2,LPINT3,
+     *           ICHECK)     
+C
+CCTT  //NORMALIZE
+C
+      DO IBP=1,NPINLT
+          UINLT(IBP)=UINLT(IBP)/U000
+          VINLT(IBP)=VINLT(IBP)/U000
+          WINLT(IBP)=WINLT(IBP)/U000
+      ENDDO
+C
+      DO IBP=1,NPWALL
+          UWALL(IBP)=UWALL(IBP)/U000
+          VWALL(IBP)=VWALL(IBP)/U000
+          WWALL(IBP)=WWALL(IBP)/U000
+      ENDDO
+C
+      IF(IVELIN.EQ.1) THEN
+          DO IBP=1,NPINLT
+              UINLT(IBP)=VELIN0(1)
+              VINLT(IBP)=VELIN0(2)
+              WINLT(IBP)=VELIN0(3)
+          ENDDO 
+      ENDIF 
+C
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+      IF(IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+C
+      DO 1400 IP = 1 , NP
+          LWRK02(IP)=0
+ 1400 CONTINUE
+C
+      DO 1401 IBP = 1 , NPWALL
+          IP=LPWALL(IBP) 
+          LWRK02(IP)=1
+ 1401 CONTINUE
+C
+      DO 1402 IPW = 1 , NPW
+          IP=LWRK01(IPW)
+          IF(LWRK02(IP).EQ.1) GOTO 1402
+          NPWALL = NPWALL+1
+          IF(NPWALL.GT.MB) THEN
+              WRITE(IUT0,*) BLANK
+              WRITE(IUT0,*) ERMSGB
+              WRITE(IUT0,*) EREXP5, MPWALL
+              GO TO 9999
+          ENDIF
+          LPWALL(NPWALL) = IP
+          LWRK02(IP)     = 1
+          UWALL (NPWALL) = 0.0E0
+          VWALL (NPWALL) = 0.0E0
+          WWALL (NPWALL) = 0.0E0
+ 1402 CONTINUE
+      WRITE(IUT6,*) ' DONE!'
+C
+C
+C            <<<<< READ INITIAL FIELD DATA >>>>>
+C
+C
+      IINTRP=0
+C
+      IF(ISTART.EQ.1) THEN
+          WRITE(IUT6,*) BLANK
+          WRITE(IUT6,*) ' ** READING INITIAL FLOW DATA **'
+          IACT     = 1
+          CALL GFALL(IUT0,IUT6,IUTIF,FILEIF,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP,IERR,
+     *               '*TIME_PS *STEP_PS *VELO_3D *PRES_3E
+     *                *PRES_3D !',
+     *               NAME,TIMEP,
+     *               NAME,NTIMEP,
+     *               NAME,MP,NPCHK1,U,V,W,
+     *               NAME,ME,NECHK ,P,
+     *               NAME,MP,NPCHK2,PN,
+     *               ICHECK)
+C
+CCTT      //NORMALIZE
+C
+          TIMEW=TIMEP
+          TIMEP=TIMEP/(D000/U000)
+          DO IP=1,NP
+              U (IP)=U (IP)/U000
+              V (IP)=V (IP)/U000
+              W (IP)=W (IP)/U000
+              PN(IP)=PN(IP)/(RHO000*U000*U000)
+          ENDDO
+C
+          DO IE=1,NE
+              P(IE)=P(IE)/(RHO000*U000*U000)
+          ENDDO
+C
+          CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+C
+          IF(IERRA.NE.0) THEN
+              WRITE(IUT0,*) BLANK
+              WRITE(IUT0,*) ERMSGC
+              GO TO 9999
+          ENDIF
+C
+          IF(NRFN.EQ.0 .AND. NPCHK1.NE.NP) THEN
+              WRITE(IUT0,*) BLANK
+              WRITE(IUT0,*) ERMSGB
+              WRITE(IUT0,*) EREXP2
+              GO TO 9999
+          ENDIF
+C
+          IF(NRFN.EQ.0 .AND. NPCHK2.NE.NP) THEN
+              IINTRP=1
+              IF(NECHK.NE.NE) THEN
+                  WRITE(IUT0,*) BLANK
+                  WRITE(IUT0,*) ERMSGB
+                  WRITE(IUT0,*) EREXP2
+                  GO TO 9999
+              ENDIF
+C
+              WRITE(IUT6,*) 'PRESSURE READ IS DEFINEDED AT ELEMENT'
+CCC           WRITE(IUT0,*) 'ONLY NODAL PRESSURE IS AVAILABLE : STOP'
+CCC           GOTO 9999           
+          ENDIF
+C
+          WRITE(IUT6,*) ' DONE!'
+      ENDIF
+C
+      NP0=NP
+      NE0=NE
+C
+#ifndef NO_REFINER
+      IF(NRFN.EQ.0) GOTO 1600
+C
+      IF(NGRID.NE.-1) THEN
+          WRITE(IUT6,*) ' **PREPARE REFINE LAYER-NUMBER TABLE **'
+          NLAYER = NGRID
+C
+          LLAYER(NRFN) = (NLAYER+1)/2
+          IF(NRFN.LT.2) GOTO 1550
+          DO 1560 IRFNR = 2, NRFN
+             IRFN = NRFN - IRFNR + 1
+             LLAYER(IRFN) = (LLAYER(IRFN+1) + NLAYER + 1)/2
+ 1560     CONTINUE
+ 1550     CONTINUE
+          DO 1599 IRFN=1, NRFN
+             WRITE(IUT6,*) "IRFN / LLAYER :", IRFN, LLAYER(IRFN)
+ 1599     CONTINUE
+      ENDIF
+C     
+      DO 1500 IRFN= 1 , NRFN
+         WRITE(IUT6,*) BLANK
+         WRITE(IUT6,*) ' ** REFINING MESH, B.C. FLOW **'
+         WRITE(IUT6,*) ' IRFN = ',IRFN
+C
+         IF(NGRID.NE.-1) NGRID = LLAYER(IRFN)
+C
+         IF (NGRID.EQ.0) GOTO 1500
+         IDUM=NE
+         CALL LRFNMS(IRFNFF,IRFN,NGRID,
+     *               ME,MP,N1,NE,NP,XD,YD,ZD,U,V,W,PN,P,NODE,LWRK05,
+     *               MB,NPWALL,LPWALL,UWALL,VWALL,WWALL,
+     *               MB,NPINLT,LPINLT,UINLT,VINLT,WINLT,
+     *               MB,NPFREE,LPFREE,
+     *               MB,NPSYMT,LPSYMT,
+     *               MB,NPBODY,LPBODY,
+     *               MB,NPINT ,LPINT1,LPINT2,LPINT3,
+     *               IPART,
+     *               MDOM,LDOM,NBPDOM,NDOM,IPSLF,IPSND,MBPDOM,
+     *               WRK01,WRK02,WRK03,LWRK06, 
+     *               DWRK3,LWRK01,LWRK02,WRK04,NODWK1,NODWK2,NODWK3,
+     *               RX,RY,NPB0, 
+     *               NPB1,LPB1,XPB1,YPB1,ZPB1,
+     *               NPB2,LPB2,XPB2,YPB2,ZPB2,
+     *               LWRK03,LWRK04,
+     *               IUT6,IUT0,IERR)
+C
+      DO 1510 IP=1, NP
+          X (IP)=REAL(XD(IP))
+          Y (IP)=REAL(YD(IP))
+          Z (IP)=REAL(ZD(IP))
+ 1510 CONTINUE
+C
+         CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+         IF(IERRA.NE.0) THEN
+            WRITE(IUT0,*) BLANK
+            WRITE(IUT0,*) ERMSGC
+            GO TO 9999
+         ENDIF
+C
+         WRITE(IUT6,*) ' ** DONE **'
+         WRITE(IUT6,*) BLANK
+C
+ 1500 CONTINUE
+      DEALLOCATE(DWRK3)
+C
+ 1600 CONTINUE
+#endif  /* REFINER */
+C
+C
+C            <<<<< REORDERING >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** REORDERING **'
+      CALL REORDR
+     &   ( JSORT,JCOLOR,NDIVX,NDIVY,NDIVZ,NEIP,
+     &     MP,ME,MWRK,NP,NE,N1,NODE,
+     &     MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     &     LPBTOA,LPATOB,LEBTOA,LEATOB,
+     &     NETET,NEPRD,NEWED,NEHEX,
+     &     NPINLT,NPWALL,NPSYMT,NPFREE,NPCCL ,NPBODY,
+     &     NPINT ,
+     &     LPINLT,LPWALL,LPSYMT,LPFREE,LPCCL1,LPCCL2,
+     &     LPBODY,LPINT1,
+     &     X,Y,Z,XD,YD,ZD,U,V,W,PN,P,
+     &     WRK01,IERR,IUT0,IUT6 )
+      NEX( 1)=NETET
+      NEX( 2)=NEPRD
+      NEX( 3)=NEWED
+      NEX( 4)=NEHEX
+      NEX( 5)=NTET
+      NEX( 6)=NPRD
+      NEX( 7)=NWED
+      NEX( 8)=NHEX
+      NEX( 9)=NSKIP1
+      NEX(10)=NSKIP2
+      NEX(11)=NSKIP3
+      NEX(12)=NSKIP4
+      if (NETET.ne.0 .or. NEPRD.ne.0 .or. NEWED.ne.0) then
+          write(IUT0,*)
+     &     ' MINIAPP SUPPORTS HEXAHEDRON FINITE ELEMENTS ONLY.'
+          GO TO 9999
+      endif
+C
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) ' ** DONE **'
+C
+C
+C            <<<<< INITILIZE VARIAVLES >>>>>
+C
+C
+      DO 1900 IP = 1 , NP
+          IF(ISTART.EQ.1) GOTO 1900
+          U (IP) = 0.E0
+          V (IP) = 0.E0
+          W (IP) = 0.E0
+ 1900 CONTINUE
+C
+      TFINAL = TFINAL+FINITE
+      DO 2000 IE = 1 , NE
+          VISC (IE) = VISCM
+ 2000 CONTINUE
+C
+      IF(ISTART.EQ.0) THEN
+          DO 2020 IE=1, NE
+              P(IE) = 0.0E0
+ 2020     CONTINUE
+          DO 2021 IP=1, NP
+              PN(IP) = 0.0E0
+ 2021     CONTINUE
+      ELSE
+         IF (NECHK.EQ.0) THEN
+            DO 2022 IE=1,NE
+               P(IE)=0.0E0
+ 2022       CONTINUE
+         ENDIF
+         IF (NPCHK2.EQ.0) THEN
+            DO 2023 IP=1,NP
+               PN(IP)=0.0E0
+ 2023       CONTINUE
+         ENDIF
+      ENDIF
+C
+C
+C            <<<<< PREPARE FOR BOUNDARY CONDITIONS >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** PREPARING FOR BOUNDARY CONDITIONS **'
+      CALL LESSFX(LOCAL,NODE,MB,NE,NP,N0,N1,NS,NSP,N2D,
+     *            XD,YD,ZD,
+     *            NPSYMT,NPSYM2,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *            NPCCL ,LPCCL1,LPCCL2,   
+     *            IPART ,MPINT ,NPINT ,LPINT1,LPINT2,LPINT3,
+     *            MDOM  ,NDOM  ,LDOM  ,NBPDOM,MBPDOM,IPSLF,IPSND,
+     *            LPBTOA,IUT0,IUT6,IERR,RX,RY,
+     *            MWRK,WRK01,WRK02,WRK03,WRK04,WRK05,WRK06,
+     *            LWRK01,LEWRK)
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+      IF(IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) ' DONE!'
+C
+      CALL DDCOM1(LPINT1,NPINT,NUMIP,NP,IUT0,IERR)
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+      IF(IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+C
+      WRITE(IUT6,*) ' DONE!'
+C
+C
+C            <<<<< INTEGRAL ELEMENT MATRICES >>>>>
+C
+C
+C     - INITIALIZE -
+      DO 2500 IE=1,NE
+          DO 2510 J=1,N1
+              SNI  (  J,IE)=0.0E0
+              DNXI (  J,IE)=0.0E0
+              DNYI (  J,IE)=0.0E0
+              DNZI (  J,IE)=0.0E0
+              SN   (  J,IE)=0.0E0
+              DNXYZ(1,J,IE)=0.0E0
+              DNXYZ(2,J,IE)=0.0E0
+              DNXYZ(3,J,IE)=0.0E0
+ 2510     CONTINUE
+ 2500 CONTINUE   
+C
+      NELM=0
+      NELM=NELM+NSKIP1*NETET
+      NELM=NELM+NSKIP2*NEPRD
+      NELM=NELM+NSKIP3*NEWED
+      NELM=NELM+NSKIP4*NEHEX
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR WORK-4'
+      SIZE   = (10*FLOAT(NELM))*WORD
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " WORK-4    :",SIZE
+      SIZEAL = SIZEAL+SIZE
+      ALLOCATE(E  (NELM+1),STAT=LERR(01))
+      ALLOCATE(EX (NELM+1),STAT=LERR(02))
+      ALLOCATE(EY (NELM+1),STAT=LERR(03))
+      ALLOCATE(EZ (NELM+1),STAT=LERR(04))
+      ALLOCATE(EXX(NELM+1),STAT=LERR(05))
+      ALLOCATE(EYY(NELM+1),STAT=LERR(06))
+      ALLOCATE(EZZ(NELM+1),STAT=LERR(07))
+      ALLOCATE(EXY(NELM+1),STAT=LERR(08))
+      ALLOCATE(EXZ(NELM+1),STAT=LERR(09))
+      ALLOCATE(EYZ(NELM+1),STAT=LERR(10))
+      CALL ERRCHK(IUT6,IPART,10,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** INTEGRATING ELEMENT MATRICES **'
+      DO 2520 IELM=1,NELM
+          E  (IELM)=0.0E0
+          EX (IELM)=0.0E0
+          EY (IELM)=0.0E0
+          EZ (IELM)=0.0E0
+          EXX(IELM)=0.0E0
+          EYY(IELM)=0.0E0
+          EZZ(IELM)=0.0E0
+          EXY(IELM)=0.0E0
+          EXZ(IELM)=0.0E0
+          EYZ(IELM)=0.0E0
+ 2520 CONTINUE   
+C
+      MELM=NELM+1
+      CALL ELM3DX(MGAUSS,IGAUSH,
+     *            MELM,N1,NE,NP,NEX,XD,YD,ZD,NODE,
+     *            SNI ,DNXI,DNYI,DNZI,SN,RX,RY,WRKN,
+     *            E,EX,EY,EZ,EXX,EYY,EZZ,EXY,EXZ,EYZ,
+     *            DWRK01,DWRK02,DWRK03,DWRK04,DWRK05,IUT0,IERR)
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+      IF(IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GO TO 9999
+      ENDIF
+      DEALLOCATE(DWRK01)
+      DEALLOCATE(DWRK02)
+      DEALLOCATE(DWRK03)
+      DEALLOCATE(DWRK04)
+      DEALLOCATE(DWRK05)
+C
+      DO 2540 IE=1,NE
+         DO 2545 J=1,N1
+            DNXYZ(1,J,IE)=RX(J,IE)
+            DNXYZ(2,J,IE)=RY(J,IE)
+            DNXYZ(3,J,IE)=WRKN(J+N1*(IE-1))
+ 2545    CONTINUE
+ 2540 CONTINUE
+      WRITE(IUT6,*) 'DONE' 
+C
+C
+C            <<<<< LUMP MASS MATRIX >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** LUMPING MASS MATRIX **'
+      CALL LUMPEX(N1,NE,NP,NEX,NODE,NELM,E,CM)
+      IDUM=2
+      DO IP=1,NP
+          WRK01(IP)=CM(IP)
+          WRK02(IP)=CM(IP)
+      ENDDO
+      IDUM=1
+      CALL DDCOMX(IPART,IDUM,LDOM,NBPDOM,NDOM,IPSLF,IPSND,MBPDOM,
+     *            CM,CM,CM,NP,IUT0,IERR,RX,RY,MAXBUF)
+      DO 2700 IP=1,NP
+          CM(IP)=1.0E0/CM(IP)
+ 2700 CONTINUE
+      WRITE(IUT6,*) ' DONE!'
+C
+      IF(IINTRP.EQ.1.OR.ISTART.EQ.1) THEN
+          WRITE(IUT6,*) BLANK
+          WRITE(IUT6,*) ' ** INTERPOLATING PRESSURE TO NODES **'
+          CALL NODLEX(NODE,ME,NE,NP,N1,NEX,SN,
+     *                IPART,LDOM,NBPDOM,NDOM,IPSLF,IPSND,MBPDOM,
+     *                P,PN,CM,IUT0,IERR,RX,RY,MAXBUF)
+          IF(IERRA.NE.0) THEN
+              WRITE(IUT0,*) BLANK
+              WRITE(IUT0,*) ERMSGC
+              GO TO 9999
+          ENDIF
+          WRITE(IUT6,*) ' DONE!'
+      ENDIF   
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** MAKING NEIBERING LISTS **'
+      CALL NEIBR2(NODE,NE,NP,N0,N1,ME,MP,MEP,MPP,
+     *            IENP,JENP,NEP,IPNP,NPP,NPPMAX,IUT0,IERR)
+      CALL ERRCHK(IUT6,IPART,1,IERR,IERRA)
+      IF (IERRA.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GOTO 9999
+      ENDIF
+      WRITE(IUT6,*) ' DONE! '
+C
+      NCRS=0
+      DO IP=1,NP
+      NCRS=NCRS+NPP(IP)
+      ENDDO
+C
+      NCRS2=0
+      IF (JUNROL.EQ.1) THEN
+         IF (                 NPPMAX.LE.30) THEN
+C           == HEX ==
+            NPPMAX=30
+         ELSE
+            NPPMAX=0
+            JUNROL=0
+         ENDIF
+         NCRS2=NP*NPPMAX
+      ENDIF
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) 'ALLOCATING VARIABLE FOR WORK-5'
+      SIZE   = (2*FLOAT(NCRS)+2*FLOAT(NCRS2))*WORD
+      SIZEAL = SIZEAL+SIZE
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " WORK-5    :",SIZE
+      ALLOCATE( IPCRS(NCRS), STAT=LERR(01))
+      ALLOCATE(  ACRS(NCRS), STAT=LERR(02))
+      ALLOCATE( TACRS(NCRS2),STAT=LERR(03))
+      ALLOCATE(ITPCRS(NCRS2),STAT=LERR(04))
+      CALL ERRCHK(IUT6,IPART,4,LERR,IERR)
+      IF(IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          WRITE(IUT0,*) EREXP1
+          GO TO 9999
+      ENDIF
+      WRITE(IUT6,*) 'DONE' 
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,'(A12,F8.2," MB ALLOCATED")') " TOTAL    :",SIZEAL
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** MAKING CRS FORMAT **'
+      CALL MKCRS(NP,MPP,NCRS,NPP,IPNP,NPP2,IPCRS,IERR)
+C
+      IF(JUNROL.EQ.1)
+     *CALL CRSCVI(NP,NPPMAX,NCRS,NCRS2,NPP,IPCRS,ITPCRS)
+      WRITE(IUT6,*) ' NUMBER OF NON-ZEROS IN CRS FORMAT; NCRS =',NCRS
+      IF (IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGB
+          WRITE(IUT0,*) EREXP7,NCRS
+          GOTO 9999
+      ENDIF
+      IF (NCRS-NPP2(NP) .NE. NPP(NP)) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GOTO 9999
+      ENDIF
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** MAKING CRS LIST **'
+      CALL E2PLST(MEP,MPP,N2,N1,NP,NE,NEX,
+     *            NODE,NEP,IENP,JENP,NPP,NPP2,IPNP,
+     *            LTAB,IUT0,IERR)
+      IF (IERR.NE.0) THEN
+          WRITE(IUT0,*) BLANK
+          WRITE(IUT0,*) ERMSGC
+          GOTO 9999
+          ENDIF
+      WRITE(IUT6,*) ' DONE! '
+C
+      IF (NTIME.EQ.0) GOTO 5100
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** CALCULATING INITIAL ELEMENT VALUES **'      
+C
+      CALL ICALEL(N1,NE,NP,NODE,U,V,W,UE,VE,WE)
+C
+      WRITE(IUT6,*) BLANK
+      EPSREP=EPSP
+C
+C
+C     <<<<<<< TIME INTEGRATION LOOP START >>>>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** TIME CALCULATING INITIAL ELEMENT VALUES **'      
+C
+      ITIME = 0
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** NOW ENTERING TIME MARCH LOOP **'
+      TIME_START(TM_MAIN_LOOP)
+      DO 5000
+C     
+          CALL DDSYNC
+C
+          ISTEP = ITIME   +NTIMEP
+          TIME  = ITIME*DT+TIMEP
+          TIMEW = TIME*(D000/U000)
+C
+C
+C         <<<<< CALCULATE MESH MOVING VELOCITY >>>>>
+C
+C
+          DEVLP1 = 1.E0-EXP(-TIME/TFINAL)
+          DEVLP2 = 1.E0/TFINAL*EXP(-TIME/TFINAL)
+C
+          ACCELX = DEVLP2*UFINAL
+          ACCELY = DEVLP2*VFINAL
+          ACCELZ = DEVLP2*WFINAL
+C
+          TIME_START(TM_VEL3D1)
+          CALL VEL3D1
+     *     (MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *      IFORM,BTDCOE,DT,
+     *      ITIME,DEVLP1,ACCELX,ACCELY,ACCELZ,
+     *      NMAXT,EPST,RESU,RESV,RESW,NITRU,NITRV,NITRW,
+     *      ME,N0,N1,N2,NE,NP,NEX,NODE,
+     *      U,V,W,VISC,UE,VE,WE,
+     *      NELM,E,EX,EY,EZ,EXX,EYY,EZZ,EXY,EXZ,EYZ,
+     *      SN,
+     *      NUMIP,
+     *      AWRK,NPP,NCRS,IPCRS,ACRS,LTAB,
+     *      NPINLT,LPINLT,UINLT,VINLT,WINLT,
+     *      NPWALL,LPWALL,UWALL,VWALL,WWALL,
+     *      NPSYMT,NPSYM2,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *      IPART,LDOM,NBPDOM,NDOM,IPSLF,IPSND,MBPDOM,
+     *      LWRK01,LWRK02,
+     *      WRK01,WRK02,WRK03,WRK04,WRK05,WRK06,
+     *      WRK07,WRK08,WRK09,WRK10,WRK11,WRK12,
+     *      RX,RY,
+     *      JUNROL,NPPMAX,NCRS2,WRK13,TACRS,ITPCRS,
+     *      IUT0,IERR)
+          TIME_STOP(TM_VEL3D1)
+          IF(IERR.NE.0) GOTO 9999
+C
+C
+C         <<<<< SOLVE PRESSURE EQUATION >>>>>
+C
+C
+          IF(ITIME.GE.1) THEN
+             DO IE=1,NE
+               DT3D(IE)=DT
+             ENDDO
+             TIME_START(TM_PRES3E)
+             CALL PRES3E(MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *             ME,N0,N1,NEX,NE,NP,
+     *             MRCM,NMAXP,NMAXB,ISOLP,
+     *             EPSP,EPSREP,DT3D,
+     *             NODE,CM,SN,DNXYZ,DNXI,DNYI,DNZI,
+     *             U,V,W,NPINLT,LPINLT,NPWALL,LPWALL,
+     *             NPSYM2,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *             NITRP,RESP,P,PN,
+     *             IPART,NDOM,MBPDOM,LDOM,NBPDOM,IPSLF,IPSND,
+     *             LWRK01,LWRK02,WRK3,WRK01,WRK02,WRK03,WRK04,
+     *             WRK05,WRK06,WRK07,WRK08,WRK09,WRK10,
+     *             PRCM,APRCM,RX,RY,MWRK,WRKN,
+     *             IUT0,IERR)
+             TIME_STOP(TM_PRES3E)
+             IF(IERR.NE.0) GOTO 9999
+C
+C
+C         <<<<< COMPUTE NEXT TIME-STEP VELOCITY >>>>>
+C
+C
+             CALL VEL3D2(MCOLOR,MCPART,NCOLOR,NCPART,LLOOP,
+     *                DIVMAX,DIVAV,XDIVMX,YDIVMX,ZDIVMX,
+     *                DT,U,V,W,P,NODE,X,Y,Z,CM,
+     *                DNXYZ,DNXI,DNYI,DNZI,
+     *                ME,NE,NP,N0,N1,NEX,
+     *                ITIME,DEVLP1,
+     *                NPINLT,LPINLT,UINLT,VINLT,WINLT,
+     *                NPWALL,LPWALL,UWALL,VWALL,WWALL,
+     *                NPSYMT,NPSYM2,LPSYMT,XPSYMT,YPSYMT,ZPSYMT,
+     *                IPART ,LDOM,NBPDOM,NDOM,IPSLF,IPSND,MBPDOM,
+     *                RX,RY,MWRK,WRKN,WRK3,WRK01,
+     *                IUT0,IERR,
+     *                WRK05)
+C
+          ENDIF
+C
+          IF(IERR.NE.0) GOTO 9999
+C
+          CALL CALUEL(N1,NE,NP,NEX,NODE,U,V,W,UE,VE,WE,IERR)
+C
+C
+C            <<<<< WRITE CALCULATION SEQUENCE >>>>>
+C
+C
+          IF(ITIME.GE.1 .AND. MOD(ITIME,INTPRN).EQ.0) THEN
+              call calave(NE, NP, P, U, V, W, ave_p, ave_v, max_v)
+              WRITE(IUT6,9000) ISTEP,NITRP,TIMEW,DIVMAX,RESP
+              WRITE(IUT6,9100) NITRU,NITRV,NITRW,RESU,RESV,RESW
+              WRITE(IUT6,9500) ave_p*(RHO000*U000*U000),
+     &                         ave_v*U000, max_v*U000
+          ENDIF
+C
+C
+C            <<<<< EMERGENTLY END TIME MARCH TO SAVE FINAL FIELD >>>>>
+C
+C
+          IF(DIVMAX.GT.DIVESC) THEN
+              WRITE(IUT6,*) BLANK
+              WRITE(IUT6,*) ERMSGB
+              WRITE(IUT6,*) EREXP6, DIVESC
+              XDIVMX=XDIVMX*D000
+              YDIVMX=YDIVMX*D000
+              ZDIVMX=ZDIVMX*D000
+              WRITE(IUT6,'(A32,3E13.5)') EREXP8, XDIVMX,YDIVMX,ZDIVMX
+              JESC = 1
+              IF(IPART.LT.1) GO TO 7000
+          ENDIF
+C
+C WHEN THE MAXIMUM DIVERGENCE EXCEEDS ESCAPE DIVERGENT LIMIT IN PARALLEL
+C MODE, NOTICE OTHER PROCESSES TO STOP THE PROGRAM AFTER WRITING THE
+C FIELD.
+C
+          IF(IPART.GE.1) THEN
+              FJESC = FLOAT(JESC)
+              CALL DDCOM2(FJESC, FJESCA)
+              IF(FJESCA.GT.0.5E0) THEN
+                  JESC = 1
+                  GO TO 7000
+              ENDIF
+          ENDIF
+C
+C
+C     <<<<<<< TIME-MARCHING LOOP END >>>>>>>
+C
+C
+      IF(ITIME.GE.NTIME) GOTO 5100
+      ITIME = ITIME + 1
+C
+ 5000 CONTINUE
+ 5100 CONTINUE
+      TIME_STOP(TM_MAIN_LOOP)
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** TIME MARCH LOOP ENDED **'
+C
+ 7000 CONTINUE
+C
+C
+C            <<<<< MAKING OUTPUT DATA >>>>>
+C
+C
+      DO 7103 IP=1,NP
+         X   (IP) = X(IP)*D000
+         Y   (IP) = Y(IP)*D000
+         Z   (IP) = Z(IP)*D000
+         U   (IP) = U(IP)*U000
+         V   (IP) = V(IP)*U000
+         W   (IP) = W(IP)*U000
+         PN  (IP) = PN(IP)*(RHO000*U000*U000)
+ 7103 CONTINUE
+C
+      DO 7104 IE=1,NE
+         P    (IE) = P (IE)*RHO000*U000*U000
+ 7104 CONTINUE
+C
+      DO 7105 IBP=1,NPINLT
+         UINLT(IBP)=UINLT(IBP)*U000
+         VINLT(IBP)=VINLT(IBP)*U000
+         WINLT(IBP)=WINLT(IBP)*U000
+ 7105 CONTINUE
+C
+      DO 7106 IBP=1,NPWALL
+         UWALL(IBP)=UWALL(IBP)*U000
+         VWALL(IBP)=VWALL(IBP)*U000
+         WWALL(IBP)=WWALL(IBP)*U000
+ 7106 CONTINUE
+C
+C
+C            <<<<< CONVERTE OUTPUT DATA >>>>>
+C
+C
+      CALL DATCNV(NP,NE,MWRK,
+     *            NPINLT,NPWALL,NPSYMT,NPFREE,NPCCL ,NPBODY,
+     *            NPINT ,
+     *            LPINLT,LPWALL,LPSYMT,LPFREE,LPCCL1,LPCCL2,
+     *            LPBODY,LPINT1,
+     *            X,Y,Z,XD,YD,ZD,U,V,W,PN,P,
+     *            LPATOB,LEATOB,WRK01,IERR,IUT0)
+C
+      CALL NODCNV(NP,NE,N0,N1,NODE,LPATOB,LEATOB,NODWK1,IERR,IUT0)
+C
+C
+C            <<<<< SAVE REFINED MESH AND B.C. DATA >>>>>
+C
+C
+      IF(IRFNMW.EQ.1)THEN
+          WRITE(IUT6,*) BLANK
+          WRITE(IUT6,*) ' ** WRITING REFINED MESH DATA **'
+          COMFLE(1) = COMGEN
+          WRITE(COMFLE(2),*) ' REFINED MESH  DATA'
+C
+          DO IE=1,NE
+             DO I=1,N0
+                 NODWK1(I,IE)=NODE(I,IE)
+             ENDDO
+          ENDDO
+C
+          IACT     = 2
+          NDUM=N0
+          CALL GFALL(IUT0,IUT6,IUTMR,FILEMR,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP,IERR,
+     *               '*GRID_3D%D *NODE_3D !',
+     *               NAME,MP,NP,XD,YD,ZD,
+     *               NAME,ME,N0,NE,NDUM,NODWK1,
+     *               ICHECK)     
+          IF(IERR.NE.0) THEN
+              WRITE(IUT0,*) BLANK
+              WRITE(IUT0,*) ERMSGC
+              GO TO 9999
+          ENDIF
+          WRITE(IUT6,*) ' DONE!'
+C
+          WRITE(IUT6,*) BLANK
+          WRITE(IUT6,*) ' ** WRITING REFINED B.C. DATA **'
+          IACT     = 2
+          NPZERO=0
+          CALL GFALL(IUT0,IUT6,IUTBR,FILEBR,
+     *               MCOM,NCOMFL,COMFLE,
+     *               MCOM,NCOMST,COMSET,
+     *               IACT,IWRITE,INAME,IRESV,  
+     *               ICAST,IDATA0,IALL,ISKIP,IERR,
+     *               '*BC_INLT *BC_IV3D *BC_MWAL *BC_WV3D *BC_WALL
+     *                *BC_SYMT *BC_FREE *BC_CYCL *BC_BODY *BC_INTR !',
+     *               NAME,MB,NPINLT,LPINLT,
+     *               NAME,MB,NPINLT,UINLT,VINLT,WINLT,
+     *               NAME,MB,NPWALL,LPWALL,
+     *               NAME,MB,NPWALL,UWALL,VWALL,WWALL,
+     *               NAME,MB,NPZERO,LWRK01,
+     *               NAME,MB,NPSYMT,LPSYMT,
+     *               NAME,MB,NPFREE,LPFREE,
+     *               NAME,MB,NPCCL ,LPCCL1,LPCCL2,
+     *               NAME,MB,NPBODY,LPBODY,
+     *               NAME,MB,NPINT, LPINT1,LPINT2,LPINT3,
+     *               ICHECK)     
+          WRITE(IUT6,*) ' DONE!'
+C
+      ENDIF
+C
+C
+C            <<<<< SAVE FINAL FIELD DATA >>>>>
+C
+C
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** WRITING FINAL FLOW DATA **'
+C
+      COMFLE(1) = COMGEN
+      WRITE(COMFLE(2),*) ' FINAL FLOW DATA'
+      WRITE(COMFLE(3),*) '      TIME:',TIMEW
+      WRITE(COMFLE(4),*) '      STEP:',ISTEP
+      IACT     = 2
+      IF(NRFN.EQ.0) THEN
+         CALL GFALL(IUT0,IUT6,IUTFF,FILEFF,
+     *              MCOM,4,COMFLE,
+     *              MCOM,0,COMSET,
+     *              IACT,IWRITE,INAME,IRESV,  
+     *              ICAST,IDATA0,IALL,ISKIP,IERR,
+     *              '*TIME_PS *STEP_PS *VELO_3D *PRES_3E
+     *               *PRES_3D !',
+     *              NAME,TIMEW,
+     *              NAME,ISTEP,
+     *              NAME,MP,NP0,U,V,W,
+     *              NAME,ME,NE0,P,
+     *              NAME,MP,NP0,PN,
+     *              ICHECK)
+      ELSE
+         CALL GFALL(IUT0,IUT6,IUTFF,FILEFF,
+     *              MCOM,4,COMFLE,
+     *              MCOM,0,COMSET,
+     *              IACT,IWRITE,INAME,IRESV,  
+     *              ICAST,IDATA0,IALL,ISKIP,IERR,
+     *              '*TIME_PS *STEP_PS *VELO_3D 
+     *               *PRES_3D !',
+     *              NAME,TIMEW,
+     *              NAME,ISTEP,
+     *              NAME,MP,NP0,U,V,W,
+     *              NAME,MP,NP0,PN,
+     *              ICHECK)
+C
+         COMFLE(1) = COMGEN
+         WRITE(COMFLE(2),*) ' FINAL FLOW DATA (REFINED)'
+         WRITE(COMFLE(3),*) '      TIME:',TIMEW
+         WRITE(COMFLE(4),*) '      STEP:',ISTEP
+         CALL GFALL(IUT0,IUT6,IUTFR,FILEFR,
+     *              MCOM,4,COMFLE,
+     *              MCOM,0,COMSET,
+     *              IACT,IWRITE,INAME,IRESV,  
+     *              ICAST,IDATA0,IALL,ISKIP,IERR,
+     *              '*TIME_PS *STEP_PS *VELO_3D *PRES_3E
+     *               *PRES_3D !',
+     *              NAME,TIMEW,
+     *              NAME,ISTEP,
+     *              NAME,MP,NP,U,V,W,
+     *              NAME,ME,NE,P,
+     *              NAME,MP,NP,PN,
+     *              ICHECK)     
+      ENDIF
+      WRITE(IUT6,*) ' DONE! '
+C
+C
+#ifdef PROF_MAPROF
+      if (IPART == 1) write(*,'(/,a)') '**** timings'
+      call maprof_print_time_mpi(TM_MAIN_LOOP,  'MAIN_LOOP*:         ')
+      call maprof_print_time_mpi(TM_VEL3D1,     '  VEL3D1:           ')
+      call maprof_print_time_mpi(TM_VEL3D1_OP1, '    VEL3D1_OP1*:    ')
+C*    call maprof_print_time_mpi(TM_VEL3D1_OP2, '    VEL3D1_OP2*:    ')
+C*    call maprof_print_time_mpi(TM_VEL3D1_OP3, '    VEL3D1_OP3*:    ')
+C*    call maprof_print_time_mpi(TM_VEL3D1_COM, '    DDCOMX:         ')
+C*    call maprof_print_time_mpi(TM_CALUEL,     '    CALUEL:         ')
+      call maprof_print_time_mpi(TM_E2PMATR,    '    E2PMATR:        ')
+      call maprof_print_time_mpi(TM_DGNSCL,     '    DGNSCL:         ')
+      call maprof_print_time_mpi(TM_CLRCRS,     '    CLRCRS:         ')
+      call maprof_print_time_mpi(TM_CRSCVA,     '    CRSCVA:         ')
+      call maprof_print_time_mpi(TM_BCGS3X,     '    BCGS3X:         ')
+      call maprof_print_time_mpi(TM_BCGS3X_COM, '      DDCOM2:       ')
+      call maprof_print_time_mpi(TM_CALAX3,     '      CALAX3:       ')
+      call maprof_print_time_mpi(TM_CALAX3_CAL, '        CALAX3_CAL*:')
+      call maprof_print_time_mpi(TM_CALAX3_COM, '        DDCOMX:     ')
+      call maprof_print_time_mpi(TM_PRES3E,     '  PRES3E:           ')
+      call maprof_print_time_mpi(TM_PRES3E_COM, '    DDCOM2:         ')
+      call maprof_print_time_mpi(TM_CALLAP,     '    CALLAP:         ')
+      call maprof_print_time_mpi(TM_GRAD3X,     '      GRAD3X:       ')
+      call maprof_print_time_mpi(TM_GRAD3X_OP0, '        GRAD3X_OP0*:')
+      call maprof_print_time_mpi(TM_GRAD3X_OP1, '        GRAD3X_OP1*:')
+      call maprof_print_time_mpi(TM_GRAD3X_OP2, '        GRAD3X_OP2*:')
+      call maprof_print_time_mpi(TM_GRAD3X_OP3, '        GRAD3X_OP3*:')
+      call maprof_print_time_mpi(TM_GRAD3X_COM, '        DDCOMX:     ')
+      call maprof_print_time_mpi(TM_FLD3X2,     '      FLD3X2:       ')
+      call maprof_output()
+#endif
+C
+      IF(JESC.EQ.0) THEN
+          WRITE(IUT6,*) BLANK
+          WRITE(IUT6,*) ' ** LES3X: SUCCESSFULLY TERMINATED **'
+      ELSE
+          WRITE(IUT6,*) BLANK
+          WRITE(IUT6,*) ' ** LES3X: TERMINATED **'
+      ENDIF
+C
+      IF(IPART.GE.2) CLOSE(IUT6)
+      CALL DDEXIT
+C
+C
+      STOP
+C
+ 9999 CONTINUE
+C
+CC    CALL DDSTOP(IPART,IUT0)
+      WRITE(IUT6,*) BLANK
+      WRITE(IUT6,*) ' ** LES3X: TERMINATED **'
+      IF(IPART.GE.2) CLOSE(IUT6)
+C
+      CALL DDEXIT
+C
+      STOP
+C
+ 9000 FORMAT(/,
+     *' STEP' , I6 , ' N=' , I4 ,
+     *     ' TIME=', 1PE12.5 , ' MAXD=', 1PE12.5 , ' RESP=' , 1PE12.5)
+ 9100 FORMAT(
+     &18X, ' NU  =', I12 , ' NV  =', I12 , ' NW  =', I12 , /,
+     &18X, ' RESU=', 1PE12.5 , ' RESV=', 1PE12.5 , ' RESW=', 1PE12.5)
+ 9500 FORMAT(
+     *18X, ' Pave=', 1PE12.5 , ' Vave=', 1PE12.5 , ' Vmax=', 1PE12.5)
+ 9600 FORMAT('      TIME:', 1PE12.5 ,'  -  ', 1PE12.5)
+ 9700 FORMAT('      STEP:',     I12 ,'  -  ',     I12)
+      END

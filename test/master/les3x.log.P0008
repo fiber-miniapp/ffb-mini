@@ -1,0 +1,1372 @@
+           
+ LES3X:VER. 42.06 :2013.03.25  
+           ** RUNNING IN PARALLEL MODE
+              NPART = 8     IPART= 8
+           
+  ** INTERNAL VARIABLE SETTINGS **
+           
+ (1) CONSTANTS REGARDING SUBGRID-SCALE MODELS
+  GRID FILTER WIDTH CONTROL FLAG  : IFILTR= 1
+  CS COMPUTING INTERVAL           : INTDYN= 10
+  CS AVERAGING NUMBER             : NAVDYN= 5
+  TEST FILTER WIDTH RATIO 1       : ALFDYN= 2.00000000
+  TEST FILTER WIDTH RATIO 2       : GAMDYN= 1.73199999
+  DSM VERSION (1:3C-VER.,2:3X-VER.):  IDSM= 2
+  MAXIMUM CS VALUE IN DSM         : CSMAX = 0.300000012
+           
+ (2) CONSTANTS REGARDING NEAR-WALL TURBULENCE
+  WALL VISCOSITY DAMP PARAMETER   : DAMPWL= 0.200000003
+  VALUE FOR VON-KARMAN CONSTANT   : VKAP  = 0.400000006
+  VALUE FOR UNIVERSAL LAW CONSTANT: B     = 5.50000000
+  VALUE FOR VAN-DRIEST CONSTANT   : AP    = 25.0000000
+           
+ (3) CONSTANTS REGARDING CAVITATION MODEL
+           
+ (4) CONSTANTS REGARDING NUMERICAL METHOD
+  NUMBER OF GAUSS POINTS FOR HEX. : IGAUSH= 64
+  NUMBER OF GAUSS POINTS FOR WED. : IGAUSW= 30
+  NUMBER OF GAUSS POINTS FOR PYR. : IGAUSP= 48
+  NUMBER OF GAUSS POINTS FOR TET. : IGAUST= 4
+  OVERSET INTERVAL FOR TRANS. EQ. : NITRIT= 30
+  OVERSET INTERVAL FOR PRS.   EQ. : NITPIP= 100
+           
+ (5) CONSTANTS REGARDING OUTPUT
+  FILE WRITING MODE FLAG          : IWRITE= 2
+  MAX. TIMESTEPS TO BE PRINTED-OUT: MAXPRN= 200
+  EMERGENLY ESCAPE DIVERGENT LIMIT: DIVESC= 10000.0000
+           
+ (6) CONSTANTS REGARDING MATRIX SOLVER
+  MATRIX SOLVER FOR PRESSURE      : ISOLP = 2
+  MATRIX SOLVER FOR HEAT TRANSFER : ISOLT = 1
+  INNER ITERATIONS NUMBER OF RCM  : NMAXB = 10
+  CONTROLL PARAMETER NS FOR IDR   : NSIDR = 5
+  CONTROLL PARAMETER NL FOR IDR   : NLIDR = 2
+           
+ (7) OTHER FLAGS AND CONSTANTS
+  OUTLET  TREATING MODE FLAG      : LFREE = 0
+           
+ (8) MAX. NUMBERS
+  MAX. NUMBER OF TOTAL     ELEMENTS = 1000000
+  MAX. NUMBER OF TOTAL        NODES = 1000000
+  MAX. NUMBER OF BOUNDARY     NODES = 1000000
+  MAX. NUMBER OF SEDN/RECV  DOMAINS = 32
+  MAX. NUMBER OF COMMUNICATION POINT= 1000000
+  MAX. NUMBER OF TIME STEPS         = 100000
+  MAX. NUMBER OF HISTORY SAVED DATA = 178
+           
+  ** ALLOCATING ARRAYS **
+  DONE!
+           
+  ** READING CALCULATION PARAMETERS **
+ 
+   LESRPX : READING CONTROLL PARAMETERS (VER.7.1)
+ LESRPX: READING CALCULATION PARAMETERS AND FILE NAMES
+ COMGEN=PARAMETER FILE FOR LES3X IN FFB VER.7.1                     
+ ITRANS=           1 IMODEL=           0 IFORM =           4
+ IPRESS=           1 FSMACH= 5.00000E-02
+ D000  = 1.00000E+00 U000  = 1.00000E+00 T000  = 1.00000E+00 TREF  = 3.00000E+02
+ IHEAT =           0 ISOLID=           0 ICAV  =           0 IBUSNQ=           0
+ NFRAME=           0 ISET  =           0 JSET  =           0 OMEGA = 1.00000E+00
+ VISCM = 1.00000E-03 SIGMA = 0.00000E+00 RHOF  = 1.00000E+00 RHOS  = 1.00000E+00
+ CONDF = 1.00000E-02 CONDS = 1.00000E-02 CPF   = 1.00000E+00 CPS   = 1.00000E+00
+ ISTART=           0 NTIME =         100 DT    = 5.00000E-03
+ NMAXSE=          10 NMAXSI=           1
+ NMAXT =           5 NMAXP =          50
+ EPST  = 1.00000E-30 EPSP  = 1.00000E-30 EPSS  = 1.00000E-30
+ TFINAL= 0.00000E+00 UFINAL= 0.00000E+00 VFINAL= 0.00000E+00 WFINAL= 0.00000E+00
+ IOUT  =           0 INTFSV=           0 INTPSV=       00000
+ NSMPL =           8
+ LSMPL = VELOCITY-V   ; XSMPL = 5.00000E-01 YSMPL = 5.00000E-01 ZSMPL = 5.00000E-01
+ LSMPL = VELOCITY-V   ; XSMPL = 1.50000E+00 YSMPL = 5.00000E-01 ZSMPL = 5.00000E-01
+ LSMPL = VELOCITY-V   ; XSMPL = 5.00000E-01 YSMPL = 1.50000E+00 ZSMPL = 5.00000E-01
+ LSMPL = VELOCITY-V   ; XSMPL = 1.50000E+00 YSMPL = 1.50000E+00 ZSMPL = 5.00000E-01
+ LSMPL = VELOCITY-V   ; XSMPL = 5.00000E-01 YSMPL = 5.00000E-01 ZSMPL = 1.50000E+00
+ LSMPL = VELOCITY-V   ; XSMPL = 1.50000E+00 YSMPL = 5.00000E-01 ZSMPL = 1.50000E+00
+ LSMPL = VELOCITY-V   ; XSMPL = 5.00000E-01 YSMPL = 1.50000E+00 ZSMPL = 1.50000E+00
+ LSMPL = VELOCITY-V   ; XSMPL = 1.50000E+00 YSMPL = 1.50000E+00 ZSMPL = 1.50000E+00
+ MESH     DAT.FILE=./DATA/MESH.P0008                                           
+ BOUNDARY DAT.FILE=./DATA/BOUN.P0008                                           
+ FLOW_IN  DAT.FILE=DUMMY.P0008                                                 
+ FLOW_OUT DAT.FILE=FLOW.P0008                                                  
+ HISTORY  DAT.FILE=HISTORY.P0008                                               
+ ATTRIB.  DAT.FILE=ATTR.P0008                                                  
+ MID-NODE DAT.FILE=MID.P0008                                                   
+ OVERSET  DAT.FILE=OVER.P0008                                                  
+ AVERAGE  DAT.FILE=AVE.P0008                                                   
+ RMS      DAT.FILE=RMS.P0008                                                   
+ STRESS   DAT.FILE=STR.P0008                                                   
+ SAMPLING DAT.FILE=FLOWS.P0008                                                 
+ SURFACE  DAT.FILE=SURF.P0008                                                  
+ DEF-MESH DAT.FILE=DFMESH.P0008                                                
+   LESRPX SUCCESFULLY TERMINATED
+ 
+  DONE!
+           
+  ** READING OPTIONAL PARAMETERS **
+  LESROP: START READING OPTIONAL PARAMETERS 
+  LESROP:
+  LESROP: "#RCAP_RF" IS DETECTED.
+  LESROP: NUMBER OF REFINE =  0
+  LESROP: GLOBAL REFINE   
+  LESROP:
+  LESROP: "#SZ_GRID" IS DETECTED.
+  LESROP: MAX. NUMBER FOR GRID
+  LESROP: MER  = 2500000
+  LESROP: MPR  = 2600000
+  LESROP:
+  LESROP: "#SZ_BOUN" IS DETECTED.
+  LESROP: MAX. NUMBER FOR B.C. DATA
+  LESROP: MBR  = 800000
+  LESROP: MBPR = 800000
+  LESROP: MDOMR= 32
+  LESROP:
+  LESROP: "#SZ_CNCT" IS DETECTED.
+  LESROP: MAX. NUMBER FOR CNNECTIVITY DATA
+  LESROP: MEPR = 12
+  LESROP: MPPR = 27
+  LESROP:
+  LESROP: "#PRS_ELM" IS DETECTED.
+  LESROP:
+  LESROP: "#RO_SORT" IS DETECTED.
+  LESROP: REORDERING 
+  LESROP: SORT       :ON   
+  LESROP: NDIVX      = 10
+  LESROP: NDIVY      = 10
+  LESROP: NDIVZ      = 10
+  LESROP:
+  LESROP: "#RO_COLR" IS DETECTED.
+  LESROP: REORDERING 
+  LESROP: COLORING   :ON   
+  LESROP: NEIP(TET)  = 2000
+  LESROP: NEIP(PRD)  = 2000
+  LESROP: NEIP(WED)  = 2000
+  LESROP: NEIP(HEX)  = 2000
+  LESROP:
+  LESROP: "#AXUNROL" IS DETECTED.
+  LESROP: AX OPERATION 
+  LESROP: FULL UNROOL:ON   
+  LESROP: END   READING OPTIONAL PARAMETERS
+  DONE!
+  NITRIT IS SET TO  5
+  NITRIP IS SET TO  50
+           
+  ** CHECKING SIZE OF MESH DATA **
+** GFALL   *** :ndata :2                                                                  
+** PERSING ***  :*GRID_3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+** PERSING ***  :*NODE_3D: POINTER OF TYPEIN IS SET AS  INTEGER                           
+ GFALL: LOOKING FOR A DATA SET                                                            
+ FILENAME       =   ./DATA/MESH.P0008                                                     
+FILE COMMENT ** CUBIC CAVITY FLOW **                                                      
+SET  COMMENT  TEST DATA                                                                   
+** READING OK ***   GRID COORDINATES (3-D)         (       3,  103823)                    
+** READING OK ***   NODE TABLE (3-D)               (       8,   97336)                    
+GFALL: SUCCESSFULLY RETURNING                                                             
+ ## GFALL: NOTE! DATA WERE NOT READ BECAUSE ISKIP WAS SET TO 1                            
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+           
+ ALLOCATING VARIABLE FOR FIELD
+ FIELD     :  628.80 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR ELEMENT SHAPE 
+ ELEMENT   :  980.00 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR CONNECTIVITY
+ CONNECT   : 1432.40 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR B.C.
+ BOUNDARY  :  176.00 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR WORK-1
+ WORK-1    : 1471.20 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR W0RK-2
+ WORK-2    :  819.20 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR W0RK-3
+ WORK-3    :  672.80 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR SIMPLE
+ SIMPLE    :   81.60 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+ DONE
+           
+ ALLOCATING VARIABLE FOR RANS CALCULATIONS
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0
+ DONE
+           
+  ** READING MESH DATA **
+** GFALL   *** :ndata :5                                                                  
+** PERSING ***  :*GRID_3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+** PERSING ***  :*NODE_3D: POINTER OF TYPEIN IS SET AS  INTEGER                           
+** PERSING ***  :*ELM_ATR: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*MOV1_3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+** PERSING ***  :*MOV0_3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+ GFALL: LOOKING FOR A DATA SET                                                            
+ FILENAME       =   ./DATA/MESH.P0008                                                     
+FILE COMMENT ** CUBIC CAVITY FLOW **                                                      
+SET  COMMENT  TEST DATA                                                                   
+** READING OK ***   GRID COORDINATES (3-D)         (       3,  103823)                    
+** READING OK ***   NODE TABLE (3-D)               (       8,   97336)                    
+GFALL: INCOMPLETE READ (END OF FILE)                                                      
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+           
+  ** SETTING MESH ATTRIBUTES **
+  DONE!
+           
+  ** READING BOUNDARY CONDITIONS DATA **
+** GFALL   *** :ndata :21                                                                 
+** PERSING ***  :*BC_INLT: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_IV3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+** PERSING ***  :*BC_MWAL: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_WV3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+** PERSING ***  :*BC_WALL: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_SYMT: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_FREE: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_CYCL: POINTER OF TYPEI2 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_BODY: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_INTR: POINTER OF TYPEI3 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_FORC: POINTER OF TYPEI2 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_FOIN: POINTER OF TYPEI2 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_TMPN: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_TMPV: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*BC_HSRN: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_HSRV: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*BC_HFXN: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_HFXV: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*BC_HTRN: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*BC_HTRV: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*BC_PSET: POINTER OF TYPEI3 IS SET AS  INTEGER                           
+ GFALL: LOOKING FOR A DATA SET                                                            
+ FILENAME       =   ./DATA/BOUN.P0008                                                     
+FILE COMMENT ** CUBIC CAVITY FLOW **                                                      
+SET  COMMENT  TEST DATA                                                                   
+** READING OK ***   WALL  BOUNDARY NODES           (       1,    4278)                    
+** READING OK ***   MOVING WALL BOUNDARY NODES     (       1,    2209)                    
+** READING OK ***   MOVING WALL VELOCITIES    3-D  (       3,    2209)                    
+** READING OK ***   INTER-CONNECT BOUNDARY NODES   (       3,    6769)                    
+GFALL: INCOMPLETE READ (END OF FILE)                                                      
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+           
+  ** REORDERING **
+ 
+SORTELEM
+TETRA           1 TO         0 :      0 ELEMS
+PYRAMID         1 TO         0 :      0 ELEMS
+WEDGE           1 TO         0 :      0 ELEMS
+HEXA            1 TO     97336 :  97336 ELEMS
+ 
+  **REORDR** : SORTING NODE
+
+DIVISION NUMBER
+X: 10
+Y: 10
+Z: 10
+
+BOUNDARY RATIO
+X:     0.100000001490116100
+Y:     0.100000001490116100
+Z:     0.100000001490116100
+
+MINIMUM AND MAXIMUM COORDINATE
+X: 1.0000000 to 2.0000000
+Y: 1.0000000 to 2.0000000
+Z: 1.0000000 to 2.0000000
+ 
+  **REORDR** : DONE
+ 
+TETRA
+SPECIFIED PART WAS MORE THAN PROCESSED ELEMENTS
+NUMBER OF PART HAS BEEN CHANGED         1 TO         0
+ 
+PYRAMID
+SPECIFIED PART WAS MORE THAN PROCESSED ELEMENTS
+NUMBER OF PART HAS BEEN CHANGED         1 TO         0
+ 
+WEDGE
+SPECIFIED PART WAS MORE THAN PROCESSED ELEMENTS
+NUMBER OF PART HAS BEEN CHANGED         1 TO         0
+ 
+NPART(TETRA  ) =         0
+NPART(PYRAMID) =         0
+NPART(WEDGE  ) =         0
+NPART(HEXA   ) =        49
+ 
+  **REORDR** : MAKING PART AND COLORG FOR EACH TYPE OF ELEMENTS
+NUM PART =       49
+PART NO.,   ELEMS
+       1     1986
+       2     1986
+       3     1987
+       4     1986
+       5     1986
+       6     1987
+       7     1986
+       8     1986
+       9     1987
+      10     1986
+      11     1986
+      12     1988
+      13     1986
+      14     1986
+      15     1987
+      16     1986
+      17     1986
+      18     1987
+      19     1986
+      20     1986
+      21     1987
+      22     1986
+      23     1987
+      24     1987
+      25     1986
+      26     1986
+      27     1987
+      28     1986
+      29     1986
+      30     1987
+      31     1986
+      32     1986
+      33     1987
+      34     1986
+      35     1986
+      36     1988
+      37     1986
+      38     1987
+      39     1986
+      40     1986
+      41     1988
+      42     1986
+      43     1986
+      44     1986
+      45     1987
+      46     1986
+      47     1987
+      48     1986
+      49     1988
+MAX =     1988
+MIN =     1986
+AVE =     1986
+ 
+TETRA   COLOR =    0
+PYRAMID COLOR =    0
+PRISM   COLOR =    0
+HEXA    COLOR =    7
+ 
+  **REORDR** : DONE
+  ** DONE **
+  ****** : MFRM= 0
+           
+  ** FINDING DATA SAMPLING ELEMENTS **
+  POINT   8  FOUND IN ELEMENT 83109
+  DONE!
+           
+  ** PREPARING FOR BOUNDARY CONDITIONS **
+ 
+  LESSRF: GENERATING NEIGHBORING DOMAIN LIST
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ 
+  LESSRF: EXTRACTING INLET SURFACES AND
+         CALCULATING INLET SURFACE NORMALS AND
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ 
+  LESSRF: EXTRACTING SYMMETRIC SURFACES,
+         CALCULATING SYMMETRIC SURFACE NORMALS AND
+         ASSIGNING SURFACE NORMAL TO SYMMETRIC NODE
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+    NESYMT= 0
+ 
+  LESSRF: EXTRACTING FREE SURFACES,
+         CALCULATING FREE SURFACE NORMALS AND
+         ASSIGNING FREE NORMAL TO FREE NODE
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+    NEFREE= 0
+ 
+  LESSRF: EXTRACTING BODY SURFACES, CALCULATING
+         THEIR NORMAL VECTORS, AND GENERATING
+         BODY SURFACE NODE TABLE
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+    NEBODY= 0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+    NEBODY= 0
+ 
+  LESSRF: EXTRACTING HEAT SURFACES, CALCULATING
+         THEIR NORMAL VECTORS, AND GENERATING
+         HEAT SURFACE NODE TABLE
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+    NEHEAT= 0
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE!
+           
+ ALLOCATING VARIABLE FOR W0RK-4
+ WORK-4    :  249.18 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+ DONE
+           
+  ** INTEGRATING ELEMENT MATRICES **
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ DONE
+           
+  ** INTEGRATING ELEMENT VECTORS ON BODY **
+  DONE!
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ DONE
+           
+  ** INTEGRATING ELEMENT VECTORS ON HEAT SURF **
+  DONE!
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+ DONE
+           
+  ** COMPUTING ELEMENT FILTER WIDTH **
+           
+  ** LUMPING MASS MATRIX **
+  DONE!
+           
+  ** MAKING NEIBERING LISTS **
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE! 
+           
+ ALLOCATING VARIABLE FOR W0RK-5
+ WORK-5    :   42.97 MB ALLOCATED
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0
+ DONE
+           
+  TOTAL    : 6824.55 MB ALLOCATED
+           
+  ** MAKING CRS FORMAT **
+  NUMBER OF NON-ZEROS IN CRS FORMAT; NCRS = 2685619
+           
+  ** MAKING CRS LIST **
+  DONE! 
+           
+  ** SEARCHING WALL ADJACENT ELEMENTS **
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0
+  DONE! 
+  WALL-ADJACENT ELEMENTS:  6211
+           
+  ** SEARCHING WALL ADJACENT NODES **
+  DONE! 
+  WALL-ADJACENT NODES:  6211
+           
+  ** CALCULATING INITIAL ELEMENT VALUES **
+           
+ CHECKING ERR FLAG: 0:OK, NOT-0:FAIL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0
+           
+  ** TIME CALCULATING INITIAL ELEMENT VALUES **
+           
+  ** NOW ENTERING TIME MARCH LOOP **
+
+ STEP     1 N=  50 TIME= 5.00000E-03 MAXD= 1.78400E-04 RESP= 4.59607E-03
+                   NU  =           5 NV  =           0 NW  =           0
+                   RESU= 1.08367E-17 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.49319E-02 Vave= 2.16788E-02 Vmax= 1.00000E+00
+                   HST1=-1.22590E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     2 N=  50 TIME= 1.00000E-02 MAXD= 6.55625E-05 RESP= 1.38106E-03
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 4.29202E-17 RESW= 2.27659E-13
+                   Pave= 2.10003E-02 Vave= 2.21036E-02 Vmax= 1.00000E+00
+                   HST1=-2.26114E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     3 N=  50 TIME= 1.50000E-02 MAXD= 3.16940E-05 RESP= 4.84737E-04
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 4.74897E-17 RESW= 1.73318E-13
+                   Pave= 1.92439E-02 Vave= 2.25153E-02 Vmax= 1.00000E+00
+                   HST1=-3.38159E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     4 N=  50 TIME= 2.00000E-02 MAXD= 6.91330E-06 RESP= 1.43129E-04
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 5.12588E-17 RESW= 1.28496E-13
+                   Pave= 1.76997E-02 Vave= 2.29108E-02 Vmax= 1.00000E+00
+                   HST1=-4.47185E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     5 N=  50 TIME= 2.50000E-02 MAXD= 4.76837E-06 RESP= 2.22586E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 5.43239E-17 RESW= 0.00000E+00
+                   Pave= 1.77802E-02 Vave= 2.33043E-02 Vmax= 1.00000E+00
+                   HST1=-5.56899E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     6 N=  50 TIME= 3.00000E-02 MAXD= 3.81470E-06 RESP= 1.91490E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 5.71414E-17 RESW= 0.00000E+00
+                   Pave= 1.76511E-02 Vave= 2.36932E-02 Vmax= 1.00000E+00
+                   HST1=-6.65162E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     7 N=  50 TIME= 3.50000E-02 MAXD= 3.81470E-06 RESP= 3.70390E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 6.00780E-17 RESW= 0.00000E+00
+                   Pave= 1.74712E-02 Vave= 2.40777E-02 Vmax= 1.00000E+00
+                   HST1=-7.72280E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     8 N=  50 TIME= 4.00000E-02 MAXD= 3.81470E-06 RESP= 3.55000E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 6.30716E-17 RESW= 0.00000E+00
+                   Pave= 1.73049E-02 Vave= 2.44579E-02 Vmax= 1.00000E+00
+                   HST1=-8.78450E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP     9 N=  50 TIME= 4.50000E-02 MAXD= 3.81470E-06 RESP= 3.55585E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 6.61625E-17 RESW= 0.00000E+00
+                   Pave= 1.71531E-02 Vave= 2.48341E-02 Vmax= 1.00000E+00
+                   HST1=-9.83638E-04 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    10 N=  50 TIME= 5.00000E-02 MAXD= 3.81470E-06 RESP= 3.70196E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.69961E-02 Vave= 2.52062E-02 Vmax= 1.00000E+00
+                   HST1=-1.08783E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    11 N=  50 TIME= 5.50000E-02 MAXD= 4.76837E-06 RESP= 3.21862E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.68438E-02 Vave= 2.55745E-02 Vmax= 1.00000E+00
+                   HST1=-1.19107E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    12 N=  50 TIME= 6.00000E-02 MAXD= 3.81470E-06 RESP= 3.00630E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.67034E-02 Vave= 2.59390E-02 Vmax= 1.00000E+00
+                   HST1=-1.29340E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    13 N=  50 TIME= 6.50000E-02 MAXD= 3.81470E-06 RESP= 3.49333E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.65604E-02 Vave= 2.62998E-02 Vmax= 1.00000E+00
+                   HST1=-1.39480E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    14 N=  50 TIME= 7.00000E-02 MAXD= 4.76837E-06 RESP= 3.31967E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.64145E-02 Vave= 2.66570E-02 Vmax= 1.00000E+00
+                   HST1=-1.49530E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    15 N=  50 TIME= 7.50000E-02 MAXD= 3.81470E-06 RESP= 3.40218E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.62779E-02 Vave= 2.70106E-02 Vmax= 1.00000E+00
+                   HST1=-1.59493E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    16 N=  50 TIME= 8.00000E-02 MAXD= 4.76837E-06 RESP= 4.41979E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.61610E-02 Vave= 2.73609E-02 Vmax= 1.00000E+00
+                   HST1=-1.69372E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    17 N=  50 TIME= 8.50000E-02 MAXD= 3.81470E-06 RESP= 3.99299E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 2.64023E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.59892E-02 Vave= 2.77074E-02 Vmax= 1.00000E+00
+                   HST1=-1.79158E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    18 N=  50 TIME= 9.00000E-02 MAXD= 4.76837E-06 RESP= 4.60479E-05
+                   NU  =           5 NV  =           5 NW  =           4
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.58972E-02 Vave= 2.80509E-02 Vmax= 1.00000E+00
+                   HST1=-1.88871E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    19 N=  50 TIME= 9.50000E-02 MAXD= 3.81470E-06 RESP= 5.09206E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 6.24418E-17
+                   Pave= 1.57356E-02 Vave= 2.83907E-02 Vmax= 1.00000E+00
+                   HST1=-1.98497E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    20 N=  50 TIME= 1.00000E-01 MAXD= 4.76837E-06 RESP= 2.90931E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 7.63537E-17
+                   Pave= 1.56061E-02 Vave= 2.87273E-02 Vmax= 1.00000E+00
+                   HST1=-2.08033E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    21 N=  50 TIME= 1.05000E-01 MAXD= 3.81470E-06 RESP= 2.22970E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 8.26191E-17
+                   Pave= 1.54954E-02 Vave= 2.90608E-02 Vmax= 1.00000E+00
+                   HST1=-2.17500E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    22 N=  50 TIME= 1.10000E-01 MAXD= 4.76837E-06 RESP= 2.64248E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.01046E-16
+                   Pave= 1.53798E-02 Vave= 2.93911E-02 Vmax= 1.00000E+00
+                   HST1=-2.26883E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    23 N=  50 TIME= 1.15000E-01 MAXD= 3.81470E-06 RESP= 2.61323E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.10199E-16
+                   Pave= 1.52509E-02 Vave= 2.97182E-02 Vmax= 1.00000E+00
+                   HST1=-2.36193E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    24 N=  50 TIME= 1.20000E-01 MAXD= 4.76837E-06 RESP= 2.90676E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.17390E-16
+                   Pave= 1.51392E-02 Vave= 3.00423E-02 Vmax= 1.00000E+00
+                   HST1=-2.45425E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    25 N=  50 TIME= 1.25000E-01 MAXD= 3.81470E-06 RESP= 2.74560E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.23318E-16
+                   Pave= 1.50206E-02 Vave= 3.03633E-02 Vmax= 1.00000E+00
+                   HST1=-2.54583E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    26 N=  50 TIME= 1.30000E-01 MAXD= 4.76837E-06 RESP= 3.11805E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.31324E-16
+                   Pave= 1.49113E-02 Vave= 3.06813E-02 Vmax= 1.00000E+00
+                   HST1=-2.63672E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    27 N=  50 TIME= 1.35000E-01 MAXD= 4.76837E-06 RESP= 3.15999E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.40773E-16
+                   Pave= 1.47966E-02 Vave= 3.09963E-02 Vmax= 1.00000E+00
+                   HST1=-2.72685E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    28 N=  50 TIME= 1.40000E-01 MAXD= 3.81470E-06 RESP= 2.84543E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.47850E-16
+                   Pave= 1.46837E-02 Vave= 3.13084E-02 Vmax= 1.00000E+00
+                   HST1=-2.81626E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    29 N=  50 TIME= 1.45000E-01 MAXD= 3.81470E-06 RESP= 2.66705E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.53707E-16
+                   Pave= 1.45773E-02 Vave= 3.16177E-02 Vmax= 1.00000E+00
+                   HST1=-2.90499E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    30 N=  50 TIME= 1.50000E-01 MAXD= 3.81470E-06 RESP= 2.85734E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.60034E-16
+                   Pave= 1.44743E-02 Vave= 3.19241E-02 Vmax= 1.00000E+00
+                   HST1=-2.99304E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    31 N=  50 TIME= 1.55000E-01 MAXD= 3.81470E-06 RESP= 2.90431E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.67692E-16
+                   Pave= 1.43677E-02 Vave= 3.22277E-02 Vmax= 1.00000E+00
+                   HST1=-3.08042E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    32 N=  50 TIME= 1.60000E-01 MAXD= 4.76837E-06 RESP= 2.86546E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.73448E-16
+                   Pave= 1.42640E-02 Vave= 3.25286E-02 Vmax= 1.00000E+00
+                   HST1=-3.16713E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    33 N=  50 TIME= 1.65000E-01 MAXD= 3.81470E-06 RESP= 2.41713E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.81433E-16
+                   Pave= 1.41576E-02 Vave= 3.28266E-02 Vmax= 1.00000E+00
+                   HST1=-3.25318E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    34 N=  50 TIME= 1.70000E-01 MAXD= 3.81470E-06 RESP= 2.42416E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.87083E-16
+                   Pave= 1.40636E-02 Vave= 3.31220E-02 Vmax= 1.00000E+00
+                   HST1=-3.33859E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    35 N=  50 TIME= 1.75000E-01 MAXD= 4.76837E-06 RESP= 3.00340E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.92189E-16
+                   Pave= 1.39738E-02 Vave= 3.34148E-02 Vmax= 1.00000E+00
+                   HST1=-3.42337E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    36 N=  50 TIME= 1.80000E-01 MAXD= 4.76837E-06 RESP= 3.28682E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 1.98213E-16
+                   Pave= 1.38705E-02 Vave= 3.37049E-02 Vmax= 1.00000E+00
+                   HST1=-3.50753E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    37 N=  50 TIME= 1.85000E-01 MAXD= 3.81470E-06 RESP= 2.43723E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.03480E-16
+                   Pave= 1.37657E-02 Vave= 3.39923E-02 Vmax= 1.00000E+00
+                   HST1=-3.59101E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    38 N=  50 TIME= 1.90000E-01 MAXD= 3.81470E-06 RESP= 2.23608E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.08752E-16
+                   Pave= 1.36783E-02 Vave= 3.42773E-02 Vmax= 1.00000E+00
+                   HST1=-3.67398E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    39 N=  50 TIME= 1.95000E-01 MAXD= 4.76837E-06 RESP= 2.32481E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.14876E-16
+                   Pave= 1.35932E-02 Vave= 3.45597E-02 Vmax= 1.00000E+00
+                   HST1=-3.75634E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    40 N=  50 TIME= 2.00000E-01 MAXD= 3.81470E-06 RESP= 2.80367E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.20422E-16
+                   Pave= 1.35055E-02 Vave= 3.48397E-02 Vmax= 1.00000E+00
+                   HST1=-3.83812E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    41 N=  50 TIME= 2.05000E-01 MAXD= 4.76837E-06 RESP= 3.60675E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.26222E-16
+                   Pave= 1.34237E-02 Vave= 3.51172E-02 Vmax= 1.00000E+00
+                   HST1=-3.91931E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    42 N=  50 TIME= 2.10000E-01 MAXD= 5.24261E-06 RESP= 3.72507E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.31797E-16
+                   Pave= 1.33262E-02 Vave= 3.53924E-02 Vmax= 1.00000E+00
+                   HST1=-3.99990E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    43 N=  50 TIME= 2.15000E-01 MAXD= 4.76837E-06 RESP= 3.06577E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.36929E-16
+                   Pave= 1.32254E-02 Vave= 3.56664E-02 Vmax= 1.00000E+00
+                   HST1=-4.07987E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    44 N=  50 TIME= 2.20000E-01 MAXD= 4.76837E-06 RESP= 2.35326E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.42622E-16
+                   Pave= 1.31406E-02 Vave= 3.59394E-02 Vmax= 1.00000E+00
+                   HST1=-4.15937E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    45 N=  50 TIME= 2.25000E-01 MAXD= 3.81470E-06 RESP= 2.10661E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.47439E-16
+                   Pave= 1.30618E-02 Vave= 3.62109E-02 Vmax= 1.00000E+00
+                   HST1=-4.23833E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    46 N=  50 TIME= 2.30000E-01 MAXD= 4.76837E-06 RESP= 2.08859E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.52925E-16
+                   Pave= 1.29849E-02 Vave= 3.64808E-02 Vmax= 1.00000E+00
+                   HST1=-4.31674E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    47 N=  50 TIME= 2.35000E-01 MAXD= 3.81470E-06 RESP= 1.69906E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.57638E-16
+                   Pave= 1.28926E-02 Vave= 3.67490E-02 Vmax= 1.00000E+00
+                   HST1=-4.39464E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    48 N=  50 TIME= 2.40000E-01 MAXD= 4.76837E-06 RESP= 2.05946E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.62872E-16
+                   Pave= 1.28314E-02 Vave= 3.70158E-02 Vmax= 1.00000E+00
+                   HST1=-4.47207E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    49 N=  50 TIME= 2.45000E-01 MAXD= 4.76837E-06 RESP= 3.06864E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 2.71705E-20 RESV= 0.00000E+00 RESW= 2.67705E-16
+                   Pave= 1.27614E-02 Vave= 3.72810E-02 Vmax= 1.00000E+00
+                   HST1=-4.54895E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    50 N=  50 TIME= 2.50000E-01 MAXD= 5.96075E-06 RESP= 3.32584E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.72697E-16
+                   Pave= 1.26667E-02 Vave= 3.75444E-02 Vmax= 1.00000E+00
+                   HST1=-4.62525E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    51 N=  50 TIME= 2.55000E-01 MAXD= 3.95432E-06 RESP= 2.63145E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 0.00000E+00 RESV= 0.00000E+00 RESW= 2.77717E-16
+                   Pave= 1.25793E-02 Vave= 3.78062E-02 Vmax= 1.00000E+00
+                   HST1=-4.70111E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    52 N=  50 TIME= 2.60000E-01 MAXD= 3.81470E-06 RESP= 1.80833E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.02122E-20 RESV= 0.00000E+00 RESW= 2.82564E-16
+                   Pave= 1.24892E-02 Vave= 3.80663E-02 Vmax= 1.00000E+00
+                   HST1=-4.77649E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    53 N=  50 TIME= 2.65000E-01 MAXD= 3.81470E-06 RESP= 1.24939E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.08121E-20 RESV= 1.99238E-19 RESW= 2.87860E-16
+                   Pave= 1.24353E-02 Vave= 3.83249E-02 Vmax= 1.00000E+00
+                   HST1=-4.85134E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    54 N=  50 TIME= 2.70000E-01 MAXD= 4.76837E-06 RESP= 1.29755E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.12076E-20 RESV= 2.19787E-19 RESW= 2.93268E-16
+                   Pave= 1.23638E-02 Vave= 3.85819E-02 Vmax= 1.00000E+00
+                   HST1=-4.92577E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    55 N=  50 TIME= 2.75000E-01 MAXD= 3.81470E-06 RESP= 1.33587E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.15749E-20 RESV= 2.42515E-19 RESW= 2.98515E-16
+                   Pave= 1.22884E-02 Vave= 3.88374E-02 Vmax= 1.00000E+00
+                   HST1=-4.99968E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    56 N=  50 TIME= 2.80000E-01 MAXD= 3.81470E-06 RESP= 1.37857E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.19210E-20 RESV= 3.20154E-19 RESW= 3.04010E-16
+                   Pave= 1.22205E-02 Vave= 3.90913E-02 Vmax= 1.00000E+00
+                   HST1=-5.07315E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    57 N=  50 TIME= 2.85000E-01 MAXD= 4.76837E-06 RESP= 1.53775E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.22954E-20 RESV= 4.39941E-19 RESW= 3.09638E-16
+                   Pave= 1.21566E-02 Vave= 3.93438E-02 Vmax= 1.00000E+00
+                   HST1=-5.14617E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    58 N=  50 TIME= 2.90000E-01 MAXD= 4.03211E-06 RESP= 1.44068E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.25469E-20 RESV= 5.46888E-19 RESW= 3.15592E-16
+                   Pave= 1.20714E-02 Vave= 3.95947E-02 Vmax= 1.00000E+00
+                   HST1=-5.21868E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    59 N=  50 TIME= 2.95000E-01 MAXD= 3.81470E-06 RESP= 1.18689E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.28148E-20 RESV= 6.92294E-19 RESW= 3.21622E-16
+                   Pave= 1.20069E-02 Vave= 3.98441E-02 Vmax= 1.00000E+00
+                   HST1=-5.29077E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    60 N=  50 TIME= 3.00000E-01 MAXD= 3.81470E-06 RESP= 1.31934E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.30563E-20 RESV= 9.36234E-19 RESW= 3.27919E-16
+                   Pave= 1.19459E-02 Vave= 4.00920E-02 Vmax= 1.00000E+00
+                   HST1=-5.36241E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    61 N=  50 TIME= 3.05000E-01 MAXD= 3.81470E-06 RESP= 1.17476E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.32279E-20 RESV= 1.39983E-18 RESW= 3.34594E-16
+                   Pave= 1.18677E-02 Vave= 4.03384E-02 Vmax= 1.00000E+00
+                   HST1=-5.43361E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    62 N=  50 TIME= 3.10000E-01 MAXD= 3.81470E-06 RESP= 1.00413E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 2.30882E-20 RESV= 2.71357E-18 RESW= 3.41542E-16
+                   Pave= 1.18080E-02 Vave= 4.05834E-02 Vmax= 1.00000E+00
+                   HST1=-5.50440E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    63 N=  50 TIME= 3.15000E-01 MAXD= 3.81470E-06 RESP= 1.14036E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 2.88405E-20 RESV= 4.48839E-17 RESW= 3.48778E-16
+                   Pave= 1.17454E-02 Vave= 4.08270E-02 Vmax= 1.00000E+00
+                   HST1=-5.57473E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    64 N=  50 TIME= 3.20000E-01 MAXD= 3.81470E-06 RESP= 1.65318E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 4.46412E-20 RESV= 3.07250E-18 RESW= 3.56280E-16
+                   Pave= 1.16885E-02 Vave= 4.10692E-02 Vmax= 1.00000E+00
+                   HST1=-5.64471E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    65 N=  50 TIME= 3.25000E-01 MAXD= 4.76837E-06 RESP= 1.24476E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 7.52191E-20 RESV= 1.44296E-18 RESW= 3.64235E-16
+                   Pave= 1.16023E-02 Vave= 4.13098E-02 Vmax= 1.00000E+00
+                   HST1=-5.71420E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    66 N=  50 TIME= 3.30000E-01 MAXD= 4.05428E-06 RESP= 1.32324E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.94336E-19 RESV= 9.23356E-19 RESW= 3.72554E-16
+                   Pave= 1.15637E-02 Vave= 4.15492E-02 Vmax= 1.00000E+00
+                   HST1=-5.78337E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    67 N=  50 TIME= 3.35000E-01 MAXD= 3.81470E-06 RESP= 1.33135E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.74309E-19 RESV= 6.52825E-19 RESW= 3.81223E-16
+                   Pave= 1.14784E-02 Vave= 4.17870E-02 Vmax= 1.00000E+00
+                   HST1=-5.85200E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    68 N=  50 TIME= 3.40000E-01 MAXD= 4.76837E-06 RESP= 1.39324E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.37136E-19 RESV= 4.93795E-19 RESW= 3.90260E-16
+                   Pave= 1.14359E-02 Vave= 4.20236E-02 Vmax= 1.00000E+00
+                   HST1=-5.92037E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    69 N=  50 TIME= 3.45000E-01 MAXD= 4.76837E-06 RESP= 1.29849E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 8.93472E-20 RESV= 3.88741E-19 RESW= 3.99657E-16
+                   Pave= 1.13610E-02 Vave= 4.22588E-02 Vmax= 1.00000E+00
+                   HST1=-5.98819E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    70 N=  50 TIME= 3.50000E-01 MAXD= 4.76837E-06 RESP= 1.05180E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 7.16624E-20 RESV= 3.26608E-19 RESW= 4.09465E-16
+                   Pave= 1.13014E-02 Vave= 4.24926E-02 Vmax= 1.00000E+00
+                   HST1=-6.05572E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    71 N=  50 TIME= 3.55000E-01 MAXD= 4.76837E-06 RESP= 8.85933E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 6.35978E-20 RESV= 2.76733E-19 RESW= 4.19705E-16
+                   Pave= 1.12460E-02 Vave= 4.27251E-02 Vmax= 1.00000E+00
+                   HST1=-6.12284E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    72 N=  50 TIME= 3.60000E-01 MAXD= 4.76837E-06 RESP= 8.59967E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.77792E-20 RESV= 1.43841E-19 RESW= 4.30376E-16
+                   Pave= 1.11898E-02 Vave= 4.29563E-02 Vmax= 1.00000E+00
+                   HST1=-6.18958E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    73 N=  50 TIME= 3.65000E-01 MAXD= 6.67572E-06 RESP= 1.11183E-05
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.61420E-20 RESV= 0.00000E+00 RESW= 4.41517E-16
+                   Pave= 1.11365E-02 Vave= 4.31863E-02 Vmax= 1.00000E+00
+                   HST1=-6.25597E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    74 N=  50 TIME= 3.70000E-01 MAXD= 5.72205E-06 RESP= 9.26116E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.46255E-20 RESV= 0.00000E+00 RESW= 4.52999E-16
+                   Pave= 1.10668E-02 Vave= 4.34148E-02 Vmax= 1.00000E+00
+                   HST1=-6.32191E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    75 N=  50 TIME= 3.75000E-01 MAXD= 4.76837E-06 RESP= 8.55567E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.47273E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.10177E-02 Vave= 4.36422E-02 Vmax= 1.00000E+00
+                   HST1=-6.38754E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    76 N=  50 TIME= 3.80000E-01 MAXD= 4.76837E-06 RESP= 8.61698E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.18434E-19 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.09610E-02 Vave= 4.38682E-02 Vmax= 1.00000E+00
+                   HST1=-6.45279E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    77 N=  50 TIME= 3.85000E-01 MAXD= 5.72205E-06 RESP= 9.19504E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.98345E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.09079E-02 Vave= 4.40931E-02 Vmax= 1.00000E+00
+                   HST1=-6.51770E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    78 N=  50 TIME= 3.90000E-01 MAXD= 4.76837E-06 RESP= 9.15180E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.74875E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.08501E-02 Vave= 4.43167E-02 Vmax= 1.00000E+00
+                   HST1=-6.58221E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    79 N=  50 TIME= 3.95000E-01 MAXD= 4.76837E-06 RESP= 8.24631E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 5.92078E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.07951E-02 Vave= 4.45390E-02 Vmax= 1.00000E+00
+                   HST1=-6.64639E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    80 N=  50 TIME= 4.00000E-01 MAXD= 5.72205E-06 RESP= 8.35738E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 6.07276E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.07445E-02 Vave= 4.47602E-02 Vmax= 1.00000E+00
+                   HST1=-6.71022E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    81 N=  50 TIME= 4.05000E-01 MAXD= 4.76837E-06 RESP= 8.66103E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 6.24078E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.06904E-02 Vave= 4.49801E-02 Vmax= 1.00000E+00
+                   HST1=-6.77369E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    82 N=  50 TIME= 4.10000E-01 MAXD= 4.76837E-06 RESP= 8.16500E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 6.42714E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.06374E-02 Vave= 4.51989E-02 Vmax= 1.00000E+00
+                   HST1=-6.83683E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    83 N=  50 TIME= 4.15000E-01 MAXD= 4.76837E-06 RESP= 8.03106E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 6.61759E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.05855E-02 Vave= 4.54165E-02 Vmax= 1.00000E+00
+                   HST1=-6.89963E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    84 N=  50 TIME= 4.20000E-01 MAXD= 5.72205E-06 RESP= 7.42178E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 6.82731E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.05337E-02 Vave= 4.56329E-02 Vmax= 1.00000E+00
+                   HST1=-6.96208E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    85 N=  50 TIME= 4.25000E-01 MAXD= 4.76837E-06 RESP= 7.44621E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 7.13632E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.04847E-02 Vave= 4.58482E-02 Vmax= 1.00000E+00
+                   HST1=-7.02422E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    86 N=  50 TIME= 4.30000E-01 MAXD= 4.76837E-06 RESP= 7.62806E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 7.36271E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.04351E-02 Vave= 4.60624E-02 Vmax= 1.00000E+00
+                   HST1=-7.08601E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    87 N=  50 TIME= 4.35000E-01 MAXD= 5.72205E-06 RESP= 8.72922E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 7.59750E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.03881E-02 Vave= 4.62754E-02 Vmax= 1.00000E+00
+                   HST1=-7.14750E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    88 N=  50 TIME= 4.40000E-01 MAXD= 5.72205E-06 RESP= 9.18236E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 7.84123E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.03334E-02 Vave= 4.64873E-02 Vmax= 1.00000E+00
+                   HST1=-7.20863E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    89 N=  50 TIME= 4.45000E-01 MAXD= 5.72205E-06 RESP= 6.79911E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 8.12026E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.02819E-02 Vave= 4.66981E-02 Vmax= 1.00000E+00
+                   HST1=-7.26944E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    90 N=  50 TIME= 4.50000E-01 MAXD= 4.76837E-06 RESP= 7.29227E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 8.38163E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.02399E-02 Vave= 4.69079E-02 Vmax= 1.00000E+00
+                   HST1=-7.32995E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    91 N=  50 TIME= 4.55000E-01 MAXD= 4.76837E-06 RESP= 6.93330E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 8.65559E-20 RESV= 0.00000E+00 RESW= 0.00000E+00
+                   Pave= 1.01893E-02 Vave= 4.71165E-02 Vmax= 1.00000E+00
+                   HST1=-7.39013E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    92 N=  50 TIME= 4.60000E-01 MAXD= 4.76837E-06 RESP= 7.12092E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 8.93199E-20 RESV= 1.42590E-19 RESW= 0.00000E+00
+                   Pave= 1.01428E-02 Vave= 4.73241E-02 Vmax= 1.00000E+00
+                   HST1=-7.45002E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    93 N=  50 TIME= 4.65000E-01 MAXD= 5.72205E-06 RESP= 8.41533E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 9.21599E-20 RESV= 1.77403E-19 RESW= 0.00000E+00
+                   Pave= 1.01020E-02 Vave= 4.75306E-02 Vmax= 1.00000E+00
+                   HST1=-7.50964E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    94 N=  50 TIME= 4.70000E-01 MAXD= 4.76837E-06 RESP= 7.80637E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 9.51091E-20 RESV= 1.95592E-19 RESW= 0.00000E+00
+                   Pave= 1.00444E-02 Vave= 4.77360E-02 Vmax= 1.00000E+00
+                   HST1=-7.56887E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    95 N=  50 TIME= 4.75000E-01 MAXD= 5.72205E-06 RESP= 6.75025E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 9.80847E-20 RESV= 2.14919E-19 RESW= 0.00000E+00
+                   Pave= 1.00028E-02 Vave= 4.79405E-02 Vmax= 1.00000E+00
+                   HST1=-7.62782E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    96 N=  50 TIME= 4.80000E-01 MAXD= 4.76837E-06 RESP= 6.36076E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.01140E-19 RESV= 2.34598E-19 RESW= 0.00000E+00
+                   Pave= 9.95865E-03 Vave= 4.81439E-02 Vmax= 1.00000E+00
+                   HST1=-7.68649E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    97 N=  50 TIME= 4.85000E-01 MAXD= 5.72205E-06 RESP= 6.66722E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.04481E-19 RESV= 2.78166E-19 RESW= 0.00000E+00
+                   Pave= 9.91396E-03 Vave= 4.83463E-02 Vmax= 1.00000E+00
+                   HST1=-7.74484E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    98 N=  50 TIME= 4.90000E-01 MAXD= 5.72205E-06 RESP= 7.75903E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.07676E-19 RESV= 2.99172E-19 RESW= 0.00000E+00
+                   Pave= 9.87045E-03 Vave= 4.85477E-02 Vmax= 1.00000E+00
+                   HST1=-7.80292E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP    99 N=  50 TIME= 4.95000E-01 MAXD= 6.67572E-06 RESP= 7.13751E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.10948E-19 RESV= 3.20264E-19 RESW= 0.00000E+00
+                   Pave= 9.82308E-03 Vave= 4.87481E-02 Vmax= 1.00000E+00
+                   HST1=-7.86069E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+
+ STEP   100 N=  50 TIME= 5.00000E-01 MAXD= 4.76837E-06 RESP= 6.80711E-06
+                   NU  =           5 NV  =           5 NW  =           5
+                   RESU= 1.14275E-19 RESV= 3.41572E-19 RESW= 0.00000E+00
+                   Pave= 9.77883E-03 Vave= 4.89475E-02 Vmax= 1.00000E+00
+                   HST1=-7.91819E-03 HST2= 0.00000E+00 HST3= 0.00000E+00
+                   QIN = 0.00000E+00 QOUT= 0.00000E+00 DP  =         NaN
+           
+  ** TIME MARCH LOOP ENDED **
+           
+  ** WRITING FINAL FLOW DATA **
+** GFALL   *** :ndata :9                                                                  
+** PERSING ***  :*TIME_PS: POINTER OF TYPEF0 IS SET AS  SINGLE                            
+** PERSING ***  :*STEP_PS: POINTER OF TYPEI0 IS SET AS  INTEGER                           
+** PERSING ***  :*VELO_3D: POINTER OF TYPEF3 IS SET AS  SINGLE                            
+** PERSING ***  :*PRES_3E: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*PRES_3D: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*TEMP_3D: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*TURK_3D: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*TURE_3D: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+** PERSING ***  :*VFRC_3E: POINTER OF TYPEF1 IS SET AS  SINGLE                            
+ GFALL: WRITING     A DATA SET                                                            
+ FILENAME       =   FLOW.P0008                                                            
+FILE COMMENT PARAMETER FILE FOR LES3X IN FFB VER.7.1                                      
+FILE COMMENT   FINAL FLOW DATA                                                            
+FILE COMMENT        TIME: 0.500000000                                                     
+FILE COMMENT        STEP: 100                                                             
+** WRITING OK ***   PRESENT TIME                   (       1,       1)  5.000000E-01      
+** WRITING OK ***   PRESENT STEP                   (       1,       1)     100            
+** WRITING OK ***   FLOW VELOCITY AT NODES  (3-D)  (       3,  103823)                    
+** WRITING OK ***   PRESSURE AT ELEMENTS    (3-D)  (       1,   97336)                    
+** WRITING OK ***   PRESSURE AT NODES       (3-D)  (       1,  103823)                    
+** WRITING OK ***   TEMPERATURE AT NODES    (3-D)  (       1,  103823)                    
+GFALL: SUCCESSFULLY RETURNING                                                             
+  DONE! 
+           
+  ** WRITING HISTORY DATA **
+** GFALL   *** :ndata :2                                                                  
+** PERSING ***  :*HSTLIST: POINTER OF TYPEI1 IS SET AS  INTEGER                           
+** PERSING ***  :*HISTORY: POINTER OF TYPEFN IS SET AS  SINGLE                            
+ GFALL: WRITING     A DATA SET                                                            
+ FILENAME       =   HISTORY.P0008                                                         
+FILE COMMENT PARAMETER FILE FOR LES3X IN FFB VER.7.1                                      
+FILE COMMENT   TIME HISTORY DATA                                                          
+FILE COMMENT       TIME: 0.00000E+00  -   5.00000E-01                                     
+FILE COMMENT       STEP:           0  -           100                                     
+SET  COMMENT  TIME                                                                        
+SET  COMMENT  MAXIMUM DIVERGENT                                                           
+SET  COMMENT  AVERAGE ELEMENT EDDY VISCOSITY                                              
+SET  COMMENT  ITERATIONS DONE FOR PRESSURE EQUATION                                       
+SET  COMMENT  L2-NORM RESIDUAL OF PRESSURE EQUATION                                       
+SET  COMMENT  FLUID FORCE ACTING IN X DIRECTION                                           
+SET  COMMENT  FLUID FORCE ACTING IN Y DIRECTION                                           
+SET  COMMENT  FLUID FORCE ACTING IN Z DIRECTION                                           
+SET  COMMENT  ITERATIONS DONE FOR U-EQUATION                                              
+SET  COMMENT  ITERATIONS DONE FOR V-EQUATION                                              
+SET  COMMENT  ITERATIONS DONE FOR W-EQUATION                                              
+SET  COMMENT  ITERATIONS DONE FOR T-EQUATION                                              
+SET  COMMENT  ITERATIONS DONE FOR K-EQUATION                                              
+SET  COMMENT  ITERATIONS DONE FOR E-EQUATION                                              
+SET  COMMENT  L2-NORM RESIDUAL OF U-EQUATION                                              
+SET  COMMENT  L2-NORM RESIDUAL OF V-EQUATION                                              
+SET  COMMENT  L2-NORM RESIDUAL OF W-EQUATION                                              
+SET  COMMENT  L2-NORM RESIDUAL OF T-EQUATION                                              
+SET  COMMENT  L2-NORM RESIDUAL OF K-EQUATION                                              
+SET  COMMENT  L2-NORM RESIDUAL OF E-EQUATION                                              
+SET  COMMENT  VOLUME INTEGRATION OF TEMPRATURE                                            
+SET  COMMENT  MAX. OVERSET ERROR                                                          
+SET  COMMENT  TOTAL VOLUME OF FIRST FLUID                                                 
+SET  COMMENT  MINIMUM VOLUME FRACTION                                                     
+SET  COMMENT  MAXMUM VOLUME FRACTION                                                      
+SET  COMMENT  MAXMUM COURANT NUMBER FOR VOF EQ.                                           
+SET  COMMENT  FLUX ON INLET BOUNDARY                                                      
+SET  COMMENT  FLUX ON OUTLET BOUNDARY                                                     
+SET  COMMENT  VELOCITY-V   ;  X=    1.50000  Y=    1.50000  Z=    1.5000                  
+** WRITING OK ***  HISTORY DATA ID                 (       1,      29)                    
+** WRITING OK ***   TIME HISTORY DATA              (      29,     100)                    
+GFALL: SUCCESSFULLY RETURNING                                                             
+  DONE! 
+   1   USRT:TIME-LOOP                  3.37500E+01
+  11   USRT:VEL3D1                     1.20000E+01
+  12   USRT:VEL3D1:BCG                 0.00000E+00
+  13   USRT:VEL3D1:BCG:AX              2.00000E+00
+  14   USRT:VEL3D1:01                  0.00000E+00
+  15   USRT:VEL3D1:02                  0.00000E+00
+  21   USRT:PRES3E                     2.12500E+01
+  22   USRT:PRES3E:RCM                 2.05000E+01
+  23   USRT:PRES3E:RCM:BCG             1.80000E+01
+  24   USRT:PRES3E:RCM:BCG:CALLAP      1.87500E+01
+  25   USRT:PRES3E:RCM:BCG:CALLAP:GRD  1.42500E+01
+  26   USRT:PRES3E:RCM:BCG:CALLAP:DIV  4.00000E+00
+  27   USRT:PRES3E:RCM:BCG:CALLAP:D2   4.00000E+00
+  41   USRT:VEL3D2                     5.00000E-01
+******* SUMMARY OF CPU TIME *******     
+(1) CPU TIME / TIME LOOP (SEC/STEP)     
+TOTAL        (sec/step):                   0.347
+MOMENTUM EQ. (sec/step),(%):               0.120 34.5
+PRESSURE EQ. (sec/step),(%):               0.218 62.6
+OTHER        (sec/step),(%):               0.010  2.9
+           
+AX OPERATION (sec/step),(%):               0.015  4.3
+           
+           
+(2) CPU TIME / AX-OPERATION (SEC/AX)    
+NUM. OF CAL-AX                              3246
+NUM. OF POINTS                           2685619
+MFLOP (MFLOPS)                             5.371
+CPU-TIME (AVE.)           :CRS (msec)      0.462
+CPU-TIME (RMS )           :CRS  [%]       2323.8
+SUSTAINED FLOPS (GFLOPS)                  11.623
+CPU-TIME (AVE.) with COMM.:CRS (msec)      0.616
+           
+           
+(3) CPU TIME /LAPLACE OPE. (SEC/LAP)    
+NUM. OF LAPLACE OPERATIONS                 12000
+NUM. OF ELEMENTS                           97336
+MFLOP (MFLOPS)                             9.344
+CPU-TIME (AVE.)          :LAP. (msec)      1.562
+CPU-TIME (RMS )          :LAP.  [%]       1261.0
+SUSTAINED FLOPS (GFLOPS)                   5.980
+           
+           
+(4) CPU TIME / ALL-REDUCE               
+NUM. OF ALL-REDUCE                         41561
+CPU-TIME (AVE.)           :ALL (msec)      0.259
+***********************************     
+           
+  ** LES3X: SUCCESSFULLY TERMINATED **
