@@ -513,6 +513,7 @@ subroutine makemesh_boun(ipx, ipy, ipz, file_boun)
   comment  = ' TEST DATA '
   write(fout) comment
 
+  if (nv_wall > 0) then
   write(fout) '#INT_ARY'
   write(fout) '*BC_WALL'
 ! write(fout) ' WALL  BOUNDARY NODES'
@@ -520,6 +521,7 @@ subroutine makemesh_boun(ipx, ipy, ipz, file_boun)
   write(fout) name
   write(fout) 1, nv_wall
   write(fout) (iv_wall(iv), iv=1, nv_wall)
+  endif
 
   if (nv_mwall > 0) then
   write(fout) '#INT_ARY'

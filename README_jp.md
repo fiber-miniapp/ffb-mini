@@ -1,8 +1,8 @@
 FFB-MINI
 ========
 
-* version: 1.0.0 (based on FFB 8.1)
-* date: 2015/05/21
+* version: 1.0.1 (based on FFB 8.1)
+* date: 2015/06/02
 * contact: miniapp@riken.jp
 
 
@@ -242,3 +242,14 @@ BiCGSTABによる速度場計算ルーチン(VEL3D1)内での内での通�
   FrontFlow/blue on the K computer",
   IPSJ Transactions on Advanced Computing Systems Vol.6, No.3 pp.31-42, 2013.
   (in Japanese)
+
+
+Version History
+---------------
+
+* 1.0.0 (May 21, 2015)
+    - Inital release
+
+* 1.0.1 (June 2, 2015)
+    - Fix a bug in makemesh
+
